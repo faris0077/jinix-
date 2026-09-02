@@ -9,6 +9,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Complaint } from '@/lib/mock-data';
 import { AlertCircle, Send, UploadCloud, Wrench, CheckCircle2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence, Stagger, StaggerItem, Reveal, springs, scaleIn } from '@/lib/motion';
 
 export default function ComplaintsPage() {
   const { complaints, addComplaint } = useChavaraStore();
@@ -70,7 +71,7 @@ export default function ComplaintsPage() {
   ];
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-300">
+    <div className="space-y-10">
       <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
           <Wrench className="w-6 h-6 text-violet-600" />
@@ -81,8 +82,8 @@ export default function ComplaintsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 glass-card p-6 sm:p-8 rounded-3xl space-y-6">
+      <Stagger className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <StaggerItem className="lg:col-span-2 glass-card p-6 sm:p-8 rounded-3xl space-y-6">
           <h2 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-violet-600" />
             <span>Log New Helpdesk Ticket</span>
@@ -115,28 +116,51 @@ export default function ComplaintsPage() {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Attach Photo Proof (Optional)</label>
-              {image ? (
-                <div className="p-3 rounded-xl bg-violet-50 dark:bg-violet-950/40 border border-violet-500/30 flex items-center justify-between text-xs font-semibold text-violet-700 dark:text-violet-300">
-                  <span className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-violet-500" /> {image}
-                  </span>
-                  <button type="button" onClick={() => setImage(null)} className="text-rose-500 hover:underline"><Trash2 className="w-4 h-4" /></button>
-                </div>
-              ) : (
-                <div onClick={() => setImage('leakage_photo_room_304A.jpg')} className="p-6 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-violet-500 text-center cursor-pointer bg-zinc-50/50 dark:bg-zinc-900/30 space-y-1">
-                  <UploadCloud className="w-7 h-7 text-violet-500 mx-auto" />
-                  <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Click to upload photo evidence</p>
-                </div>
-              )}
+              <AnimatePresence mode="wait" initial={false}>
+                {image ? (
+                  <motion.div
+                    key="attached"
+                    variants={scaleIn}
+                    initial="hidden"
+                    animate="visible"
+                    exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.25, ease: 'easeIn' } }}
+                    className="p-3 rounded-xl bg-violet-50 dark:bg-violet-950/40 border border-violet-500/30 flex items-center justify-between text-xs font-semibold text-violet-700 dark:text-violet-300"
+                  >
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-violet-500" /> {image}
+                    </span>
+                    <motion.button type="button" whileTap={{ scale: 0.97 }} transition={springs.snappy} onClick={() => setImage(null)} className="text-rose-500 hover:underline"><Trash2 className="w-4 h-4" /></motion.button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="upload"
+                    variants={scaleIn}
+                    initial="hidden"
+                    animate="visible"
+                    exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.25, ease: 'easeIn' } }}
+                    onClick={() => setImage('leakage_photo_room_304A.jpg')}
+                    className="p-6 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-violet-500 transition-colors text-center cursor-pointer bg-zinc-50/50 dark:bg-zinc-900/30 space-y-1"
+                  >
+                    <UploadCloud className="w-7 h-7 text-violet-500 mx-auto" />
+                    <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Click to upload photo evidence</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            <button type="submit" className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2">
+            <motion.button
+              type="submit"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
+              className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2"
+            >
               <Send className="w-4 h-4" /> Submit Complaint Ticket
-            </button>
+            </motion.button>
           </form>
-        </div>
+        </StaggerItem>
 
-        <div className="glass-card p-6 sm:p-8 rounded-3xl space-y-4">
+        <StaggerItem className="glass-card p-6 sm:p-8 rounded-3xl space-y-4">
           <h3 className="font-bold text-base text-zinc-900 dark:text-white">Active Ticket Resolution Timeline</h3>
           <Timeline
             steps={[
@@ -145,10 +169,12 @@ export default function ComplaintsPage() {
               { title: 'Final Resolution & Sign-off', description: 'Ticket closed after network benchmark test', timestamp: 'Pending', status: 'pending' },
             ]}
           />
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
 
-      <DataTable columns={columns} data={complaints} title="Helpdesk Complaint Logs" />
+      <Reveal delay={0.05}>
+        <DataTable columns={columns} data={complaints} title="Helpdesk Complaint Logs" />
+      </Reveal>
     </div>
   );
 }

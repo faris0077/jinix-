@@ -3,6 +3,7 @@
 import React from 'react';
 import { useChavaraStore } from '@/lib/store';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { motion, Stagger, StaggerItem, TiltCard, springs } from '@/lib/motion';
 import {
   User as UserIcon,
   Building2,
@@ -23,9 +24,9 @@ export default function StudentProfilePage() {
   const roommates = myRoom?.students.filter((s) => s.id !== currentUser.id) || [];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8">
       {/* Header Profile Hero Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-900 via-purple-900 to-zinc-950 p-8 text-white shadow-xl border border-violet-500/20">
+      <TiltCard max={4} className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-900 via-purple-900 to-zinc-950 p-8 text-white shadow-xl border border-violet-500/20">
         <div className="absolute top-0 right-0 w-80 h-80 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -56,12 +57,12 @@ export default function StudentProfilePage() {
             </div>
           </div>
         </div>
-      </div>
+      </TiltCard>
 
       {/* Grid: Room Allocation & Emergency Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Stagger className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Room & Wing Details */}
-        <div className="glass-card p-6 rounded-3xl space-y-6">
+        <StaggerItem className="glass-card p-6 rounded-3xl space-y-6">
           <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
             <h2 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
               <Building2 className="w-5 h-5 text-violet-600" />
@@ -107,10 +108,10 @@ export default function StudentProfilePage() {
               ))
             )}
           </div>
-        </div>
+        </StaggerItem>
 
         {/* Guardian & Chief Warden Contacts */}
-        <div className="glass-card p-6 rounded-3xl space-y-6">
+        <StaggerItem className="glass-card p-6 rounded-3xl space-y-6">
           <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
             <h2 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-500" />
@@ -148,17 +149,20 @@ export default function StudentProfilePage() {
                     <p className="text-xs text-zinc-500">Chief Warden, Block B (St. Teresa Wing)</p>
                   </div>
                 </div>
-                <button
+                <motion.button
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={springs.snappy}
                   onClick={() => alert('Warden Emergency Helpline: +91 98000 11111')}
-                  className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition-all shadow-sm"
+                  className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition-colors shadow-sm"
                 >
                   Call Helpline
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
     </div>
   );
 }

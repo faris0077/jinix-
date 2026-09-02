@@ -43,6 +43,19 @@ import {
   Legend
 } from 'recharts';
 import { toast } from 'sonner';
+import {
+  motion,
+  AnimatePresence,
+  springs,
+  listItem,
+  hoverLift,
+  Stagger,
+  StaggerItem,
+  Reveal,
+  AnimatedNumber,
+  TiltCard,
+  EASE_OUT,
+} from '@/lib/motion';
 
 const ANNUAL_REVENUE_DATA = [
   { month: 'Jan', income: 42000, expense: 28000, budget: 35000 },
@@ -55,10 +68,10 @@ const ANNUAL_REVENUE_DATA = [
 ];
 
 const BLOCK_OCCUPANCY_DATA = [
-  { name: 'Block A (St. Alphonsa Wing)', occupied: 450, capacity: 450, color: '#10B981', warden: 'Sr. Anitha Philip' },
-  { name: 'Block B (St. Teresa Wing)', occupied: 445, capacity: 450, color: '#6D28D9', warden: 'Dr. Sr. Mary Thomas' },
-  { name: 'Block C (St. Euphrasia Wing)', occupied: 480, capacity: 500, color: '#A855F7', warden: 'Dr. Elizabeth Varghese' },
-  { name: 'Block D (Mother Carmel Wing)', occupied: 440, capacity: 450, color: '#EC4899', warden: 'Sr. Rose Mary' },
+  { name: 'Block A (St. Alphonsa Wing)', occupied: 450, capacity: 450, color: '#8d7cc9', warden: 'Sr. Anitha Philip' },
+  { name: 'Block B (St. Teresa Wing)', occupied: 445, capacity: 450, color: '#1c9a89', warden: 'Dr. Sr. Mary Thomas' },
+  { name: 'Block C (St. Euphrasia Wing)', occupied: 480, capacity: 500, color: '#b3812c', warden: 'Dr. Elizabeth Varghese' },
+  { name: 'Block D (Mother Carmel Wing)', occupied: 440, capacity: 450, color: '#4f80b8', warden: 'Sr. Rose Mary' },
 ];
 
 export default function DirectorDashboard() {
@@ -103,8 +116,9 @@ export default function DirectorDashboard() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8">
       {/* Executive Hero Banner */}
+      <TiltCard max={4}>
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-zinc-950 via-violet-950 to-indigo-950 p-8 text-white shadow-2xl border border-violet-500/30">
         <div className="absolute -right-20 -top-20 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
         <div className="absolute left-1/3 -bottom-20 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -124,24 +138,31 @@ export default function DirectorDashboard() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <button
+            <motion.button
               onClick={() => setIsBroadcastModalOpen(true)}
-              className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm shadow-xl backdrop-blur-md border border-white/20 transition-all flex items-center gap-2"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
+              className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm shadow-xl backdrop-blur-md border border-white/20 transition-colors flex items-center gap-2"
             >
               <Megaphone className="w-4 h-4 text-amber-400" />
               <span className="hidden sm:inline">Global Broadcast</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={handleExportBriefing}
-              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 text-white font-bold text-sm shadow-xl shadow-violet-600/30 transition-all flex items-center gap-2"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 text-white font-bold text-sm shadow-xl shadow-violet-600/30 transition-colors flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export Board Report PDF</span>
               <span className="sm:hidden">Export PDF</span>
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
+      </TiltCard>
 
       {/* Action Center - Critical Escalations */}
       {(highPriorityComplaints.length > 0 || pendingLeaves.length > 0) && (
@@ -152,15 +173,26 @@ export default function DirectorDashboard() {
               <span>Critical Maintenance Escalations</span>
             </h3>
             <div className="space-y-3">
-              {highPriorityComplaints.length > 0 ? highPriorityComplaints.map(c => (
-                <div key={c.id} className="flex justify-between items-center p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-white">{c.title}</p>
-                    <p className="text-xs text-zinc-500">Room {c.roomNumber} • {c.category}</p>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-1 bg-rose-100 text-rose-700 rounded-full uppercase">Action Req</span>
-                </div>
-              )) : (
+              <AnimatePresence initial={false}>
+                {highPriorityComplaints.map(c => (
+                  <motion.div
+                    key={c.id}
+                    variants={listItem}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    layout
+                    className="flex justify-between items-center p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-white">{c.title}</p>
+                      <p className="text-xs text-zinc-500">Room {c.roomNumber} • {c.category}</p>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-1 bg-rose-100 text-rose-700 rounded-full uppercase">Action Req</span>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              {highPriorityComplaints.length === 0 && (
                 <p className="text-sm text-zinc-500">No critical escalations.</p>
               )}
             </div>
@@ -172,16 +204,27 @@ export default function DirectorDashboard() {
               <span>Pending Warden Approvals (&gt;24h)</span>
             </h3>
             <div className="space-y-3">
-              {pendingLeaves.length > 0 ? pendingLeaves.map(l => (
-                <div key={l.id} className="flex justify-between items-center p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-white">{l.studentName}</p>
-                    <p className="text-xs text-zinc-500">Type: {l.type.toUpperCase()} • Room {l.roomNumber}</p>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-1 bg-amber-100 text-amber-700 rounded-full uppercase">Pending</span>
-                </div>
-              )) : (
-                 <p className="text-sm text-zinc-500">No delayed approvals.</p>
+              <AnimatePresence initial={false}>
+                {pendingLeaves.map(l => (
+                  <motion.div
+                    key={l.id}
+                    variants={listItem}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    layout
+                    className="flex justify-between items-center p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-white">{l.studentName}</p>
+                      <p className="text-xs text-zinc-500">Type: {l.type.toUpperCase()} • Room {l.roomNumber}</p>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-1 bg-amber-100 text-amber-700 rounded-full uppercase">Pending</span>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              {pendingLeaves.length === 0 && (
+                <p className="text-sm text-zinc-500">No delayed approvals.</p>
               )}
             </div>
           </div>
@@ -189,66 +232,82 @@ export default function DirectorDashboard() {
       )}
 
       {/* Primary Financial & Operational KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-emerald-500/20">
+      <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <StaggerItem className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-emerald-500/20">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Annual Revenue (2026)</span>
             <DollarSign className="w-5 h-5 text-emerald-500" />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white">$480,500</span>
+            <AnimatedNumber
+              value={480500}
+              format={(v) => `$${Math.round(v).toLocaleString()}`}
+              className="text-3xl font-extrabold text-zinc-900 dark:text-white"
+            />
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
               +14.2% YoY
             </span>
           </div>
           <p className="text-xs text-zinc-500">Monsoon semester collections active</p>
-        </div>
+        </StaggerItem>
 
-        <div className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-violet-500/20">
+        <StaggerItem className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-violet-500/20">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Campus Occupancy</span>
             <Building2 className="w-5 h-5 text-violet-500" />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white">{occupancyRate}%</span>
+            <AnimatedNumber
+              value={parseFloat(occupancyRate)}
+              format={(v) => v.toFixed(1) + '%'}
+              className="text-3xl font-extrabold text-zinc-900 dark:text-white"
+            />
             <span className="text-xs font-bold text-violet-600 bg-violet-50 dark:bg-violet-950/60 px-2 py-0.5 rounded">
               {totalOccupied} Beds
             </span>
           </div>
           <p className="text-xs text-zinc-500">Across 4 luxury accommodation blocks</p>
-        </div>
+        </StaggerItem>
 
-        <div className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-purple-500/20">
+        <StaggerItem className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-purple-500/20">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Security & Audit Index</span>
             <ShieldCheck className="w-5 h-5 text-purple-500" />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white">99.8%</span>
+            <AnimatedNumber
+              value={99.8}
+              format={(v) => v.toFixed(1) + '%'}
+              className="text-3xl font-extrabold text-zinc-900 dark:text-white"
+            />
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
               Zero Breaches
             </span>
           </div>
           <p className="text-xs text-zinc-500">Biometric turnstile and location log compliance</p>
-        </div>
+        </StaggerItem>
 
-        <div className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-blue-500/20">
+        <StaggerItem className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-blue-500/20">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Total Active Scholars</span>
             <Users className="w-5 h-5 text-blue-500" />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white">1,815</span>
+            <AnimatedNumber
+              value={1815}
+              format={(v) => Math.round(v).toLocaleString()}
+              className="text-3xl font-extrabold text-zinc-900 dark:text-white"
+            />
             <span className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
               4 Wings
             </span>
           </div>
           <p className="text-xs text-zinc-500">B.Tech, MBA, Architecture & Science</p>
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <Reveal className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Revenue vs Operational Expenses Area Chart (2 Cols) */}
         <div id="revenue" className="lg:col-span-2 glass-card p-6 rounded-3xl space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
@@ -269,26 +328,26 @@ export default function DirectorDashboard() {
               <AreaChart data={ANNUAL_REVENUE_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="incColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#2c7d52" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#2c7d52" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="expColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F43F5E" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#F43F5E" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#c05c7c" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#c05c7c" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="budgetColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#4f80b8" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#4f80b8" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.15)" vertical={false} />
-                <XAxis dataKey="month" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val/1000}k`} />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.9)', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }} formatter={(val: any) => [`$${Number(val || 0).toLocaleString()}`, '']} />
+                <XAxis dataKey="month" stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val/1000}k`} />
+                <Tooltip contentStyle={{ backgroundColor: 'rgba(28, 27, 34, 0.95)', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }} formatter={(val: any) => [`$${Number(val || 0).toLocaleString()}`, '']} />
                 <Legend verticalAlign="top" height={36} />
-                <Area type="monotone" name="Fee Revenue ($)" dataKey="income" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#incColor)" />
-                <Area type="monotone" name="Operational Expenses ($)" dataKey="expense" stroke="#F43F5E" strokeWidth={2} fillOpacity={1} fill="url(#expColor)" />
-                <Area type="monotone" name="Budget Allocation ($)" dataKey="budget" stroke="#3B82F6" strokeWidth={2} strokeDasharray="5 5" fillOpacity={1} fill="url(#budgetColor)" />
+                <Area type="monotone" name="Fee Revenue ($)" dataKey="income" stroke="#2c7d52" strokeWidth={3} fillOpacity={1} fill="url(#incColor)" />
+                <Area type="monotone" name="Operational Expenses ($)" dataKey="expense" stroke="#c05c7c" strokeWidth={2} strokeDasharray="1 4" strokeLinecap="round" fillOpacity={1} fill="url(#expColor)" />
+                <Area type="monotone" name="Budget Allocation ($)" dataKey="budget" stroke="#4f80b8" strokeWidth={2} strokeDasharray="5 5" fillOpacity={1} fill="url(#budgetColor)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -312,7 +371,7 @@ export default function DirectorDashboard() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.9)', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '11px' }} formatter={(val: any) => [`${val || 0} Beds Occupied`, '']} />
+                <Tooltip contentStyle={{ backgroundColor: 'rgba(28, 27, 34, 0.95)', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '11px' }} formatter={(val: any) => [`${val || 0} Beds Occupied`, '']} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -329,9 +388,10 @@ export default function DirectorDashboard() {
             ))}
           </div>
         </div>
-      </div>
+      </Reveal>
 
       {/* Executive Gate Logistics & External Delivery Overview */}
+      <Reveal>
       <div className="glass-card p-6 rounded-3xl space-y-4 border-orange-500/25 bg-gradient-to-br from-orange-500/5 via-transparent to-transparent">
         <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <div>
@@ -350,7 +410,7 @@ export default function DirectorDashboard() {
           <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
             <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Active Gate Deliveries</span>
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-extrabold text-orange-500">{activeDeliveries}</span>
+              <AnimatedNumber value={activeDeliveries} className="text-2xl font-extrabold text-orange-500" />
               <span className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-950 px-2 py-0.5 rounded">Waiting / En Route</span>
             </div>
             <p className="text-[11px] text-zinc-400">Main turnstile turnspit clearance</p>
@@ -368,15 +428,21 @@ export default function DirectorDashboard() {
           <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
             <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Post-Curfew Compliance</span>
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-extrabold text-emerald-500">100%</span>
+              <AnimatedNumber
+                value={100}
+                format={(v) => `${Math.round(v)}%`}
+                className="text-2xl font-extrabold text-emerald-500"
+              />
               <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded">Zero Unauthorized</span>
             </div>
             <p className="text-[11px] text-zinc-400">All late couriers cleared by Wardens</p>
           </div>
         </div>
       </div>
+      </Reveal>
 
       {/* Block Governance Table */}
+      <Reveal delay={0.05}>
       <div className="glass-card p-6 rounded-3xl space-y-4 border-violet-500/20">
         <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
@@ -390,10 +456,11 @@ export default function DirectorDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
           {BLOCK_OCCUPANCY_DATA.map((block) => (
-            <div 
-              key={block.name} 
+            <motion.div
+              key={block.name}
               onClick={() => setSelectedBlock(block.name)}
-              className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-sm hover:border-violet-500 hover:shadow-violet-500/20 transition-all cursor-pointer group"
+              {...hoverLift}
+              className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-sm hover:border-violet-500 hover:shadow-violet-500/20 transition-[border-color,box-shadow] cursor-pointer group"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-extrabold text-violet-600 dark:text-violet-400 uppercase tracking-wider bg-violet-50 dark:bg-violet-950/60 px-2 py-0.5 rounded">
@@ -413,15 +480,30 @@ export default function DirectorDashboard() {
                 <span>{block.occupied} / {block.capacity} Beds</span>
                 <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Audited</span>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
+      </Reveal>
 
       {/* Broadcast Modal */}
+      <AnimatePresence>
       {isBroadcastModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+        <motion.div
+          key="broadcast-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25, ease: EASE_OUT }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: 8 }}
+            transition={springs.soft}
+            className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden"
+          >
             <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
               <h3 className="font-bold text-xl flex items-center gap-2"><Megaphone className="text-violet-600" /> New Global Broadcast</h3>
               <button onClick={() => setIsBroadcastModalOpen(false)} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><X className="w-5 h-5" /></button>
@@ -450,9 +532,16 @@ export default function DirectorDashboard() {
                 <label className="block text-sm font-semibold mb-2 text-zinc-900 dark:text-zinc-200">Priority Level</label>
                 <div className="flex gap-3">
                   {(['normal', 'high', 'urgent'] as const).map(p => (
-                    <label key={p} className={`flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all ${broadcastPriority === p ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300' : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'}`}>
+                    <label key={p} className={`relative flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-colors ${broadcastPriority === p ? 'border-transparent text-violet-700 dark:text-violet-300' : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'}`}>
+                      {broadcastPriority === p && (
+                        <motion.div
+                          layoutId="broadcast-priority-pill"
+                          transition={springs.snappy}
+                          className="absolute inset-0 rounded-xl border border-violet-500 bg-violet-50 dark:bg-violet-950/30"
+                        />
+                      )}
                       <input type="radio" name="priority" checked={broadcastPriority === p} onChange={() => setBroadcastPriority(p)} className="sr-only" />
-                      <span className="text-sm font-medium capitalize">{p}</span>
+                      <span className="relative z-10 text-sm font-medium capitalize">{p}</span>
                     </label>
                   ))}
                 </div>
@@ -460,16 +549,37 @@ export default function DirectorDashboard() {
             </div>
             <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-3 bg-zinc-50 dark:bg-zinc-950/50">
               <button onClick={() => setIsBroadcastModalOpen(false)} className="px-5 py-2.5 rounded-xl font-bold text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all">Cancel</button>
-              <button onClick={handleSendBroadcast} className="px-5 py-2.5 rounded-xl font-bold text-sm bg-violet-600 hover:bg-violet-700 text-white shadow-md transition-all">Send Broadcast</button>
+              <motion.button
+                onClick={handleSendBroadcast}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={springs.snappy}
+                className="px-5 py-2.5 rounded-xl font-bold text-sm bg-violet-600 hover:bg-violet-700 text-white shadow-md transition-colors"
+              >Send Broadcast</motion.button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Block Details Modal */}
+      <AnimatePresence>
       {selectedBlock && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+        <motion.div
+          key="block-details-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25, ease: EASE_OUT }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: 8 }}
+            transition={springs.soft}
+            className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden"
+          >
             <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-violet-50 dark:bg-violet-950/30">
               <h3 className="font-bold text-xl text-violet-900 dark:text-violet-100">{selectedBlock}</h3>
               <button onClick={() => setSelectedBlock(null)} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><X className="w-5 h-5" /></button>
@@ -501,9 +611,10 @@ export default function DirectorDashboard() {
             <div className="p-6 border-t border-zinc-100 dark:border-zinc-800">
               <button onClick={() => setSelectedBlock(null)} className="w-full py-3 rounded-xl font-bold text-sm bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white transition-all">Close Dossier</button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

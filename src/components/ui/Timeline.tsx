@@ -3,7 +3,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, Clock, XCircle, AlertCircle, Circle, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, Reveal, EASE_OUT } from '@/lib/motion';
 
 export interface TimelineStep {
   title: string;
@@ -21,7 +21,13 @@ export function Timeline({ steps, className }: TimelineProps) {
   return (
     <div className={cn('relative pl-6 space-y-6', className)}>
       {/* Vertical line */}
-      <div className="absolute top-2.5 bottom-2.5 left-2.5 w-0.5 bg-zinc-200 dark:bg-zinc-800 -z-0" />
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: '-40px' }}
+        transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.1 }}
+        className="absolute top-2.5 bottom-2.5 left-2.5 w-0.5 bg-zinc-200 dark:bg-zinc-800 -z-0"
+      />
 
       {steps.map((step, idx) => {
         const isCompleted = step.status === 'completed';
@@ -29,11 +35,10 @@ export function Timeline({ steps, className }: TimelineProps) {
         const isRejected = step.status === 'rejected';
 
         return (
-          <motion.div
+          <Reveal
             key={idx}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.1 }}
+            delay={idx * 0.08}
+            y={12}
             className="relative flex items-start justify-between gap-4 group"
           >
             {/* Circle Node */}
@@ -43,7 +48,7 @@ export function Timeline({ steps, className }: TimelineProps) {
                 isCompleted
                   ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
                   : isCurrent
-                  ? 'bg-violet-600 text-white shadow-md shadow-violet-500/40 animate-pulse'
+                  ? 'bg-violet-600 text-white shadow-md shadow-violet-500/40'
                   : isRejected
                   ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/30'
                   : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400'
@@ -85,7 +90,7 @@ export function Timeline({ steps, className }: TimelineProps) {
                 {step.description}
               </p>
             </div>
-          </motion.div>
+          </Reveal>
         );
       })}
     </div>

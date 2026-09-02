@@ -4,48 +4,52 @@
 
 @layer base {
   :root {
-    --background: 240 20% 99%; /* #FAFAFC */
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 263 70% 50%; /* #6D28D9 */
-    --primary-foreground: 0 0% 98%;
-    --secondary: 262 83% 58%; /* #7C3AED */
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 271 91% 65%; /* #A855F7 */
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 263 70% 50%;
+    /* Soft porcelain light theme — warm lavender-tinted neutrals, muted accents */
+    --background: 252 22% 97%;
+    --foreground: 250 10% 26%;
+    --card: 255 30% 99%;
+    --card-foreground: 250 10% 26%;
+    --popover: 255 30% 99%;
+    --popover-foreground: 250 10% 26%;
+    --primary: 253 30% 56%; /* dusty lavender */
+    --primary-foreground: 255 30% 98%;
+    --secondary: 253 26% 63%;
+    --secondary-foreground: 255 30% 98%;
+    --muted: 250 16% 94%;
+    --muted-foreground: 250 8% 48%;
+    --accent: 262 26% 65%;
+    --accent-foreground: 250 10% 26%;
+    --destructive: 0 40% 56%;
+    --destructive-foreground: 0 20% 97%;
+    --border: 250 16% 89%;
+    --input: 250 16% 89%;
+    --ring: 253 30% 56%;
+    --white: 255 30% 99%; /* what text-white / bg-white resolve to in light mode */
     --radius: 0.875rem; /* 14px default rounded corners */
   }
 
   .dark {
-    --background: 240 10% 3.5%; /* #09090B */
-    --foreground: 0 0% 98%;
-    --card: 240 10% 6%; /* Dark Gray */
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 6%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 263 70% 58%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 262 83% 65%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 271 91% 65%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 263 70% 58%;
+    /* Soft graphite dark theme — lifted charcoal, no pure black or pure white */
+    --background: 250 12% 9%;
+    --foreground: 250 16% 86%;
+    --card: 250 11% 12%;
+    --card-foreground: 250 16% 86%;
+    --popover: 250 11% 12%;
+    --popover-foreground: 250 16% 86%;
+    --primary: 253 32% 67%;
+    --primary-foreground: 250 12% 12%;
+    --secondary: 253 26% 72%;
+    --secondary-foreground: 250 12% 12%;
+    --muted: 250 10% 16%;
+    --muted-foreground: 250 10% 62%;
+    --accent: 262 24% 70%;
+    --accent-foreground: 250 12% 12%;
+    --destructive: 0 34% 54%;
+    --destructive-foreground: 0 15% 92%;
+    --border: 250 10% 18%;
+    --input: 250 10% 18%;
+    --ring: 253 32% 67%;
+    --white: 250 18% 89%; /* soft lavender-white keeps text-white gentle on dark */
   }
 }
 
@@ -70,11 +74,11 @@
   }
   
   .soft-shadow {
-    box-shadow: 0 10px 30px -10px rgba(109, 40, 217, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 10px 30px -10px rgba(105, 92, 148, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
   }
-  
+
   .dark .soft-shadow {
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.25), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
   }
 
   .glow-effect {
@@ -84,14 +88,14 @@
     content: '';
     position: absolute;
     inset: -1px;
-    background: linear-gradient(to right, #6d28d9, #a855f7, #7c3aed);
+    background: linear-gradient(to right, #695c94, #a79ccf, #9083bf);
     border-radius: inherit;
     z-index: -1;
     opacity: 0;
     transition: opacity 0.3s ease;
   }
   .glow-effect:hover::after {
-    opacity: 0.5;
+    opacity: 0.3;
   }
 }
 
@@ -104,9 +108,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.3);
+  background: rgba(126, 123, 140, 0.25);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(109, 40, 217, 0.5);
+  background: rgba(144, 131, 191, 0.4);
 }

@@ -7,6 +7,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { LeaveRequest } from '@/lib/mock-data';
 import { Send, UploadCloud, FileText, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence, springs, Stagger, StaggerItem, Reveal, EASE_OUT } from '@/lib/motion';
 import { toast } from 'sonner';
 
 export default function ClassLeavePage() {
@@ -65,7 +66,7 @@ export default function ClassLeavePage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8">
       <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
           <Send className="w-6 h-6 text-violet-600" />
@@ -76,8 +77,8 @@ export default function ClassLeavePage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 glass-card p-6 sm:p-8 rounded-3xl space-y-6">
+      <Stagger className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <StaggerItem className="lg:col-span-2 glass-card p-6 sm:p-8 rounded-3xl space-y-6">
           <h2 className="font-bold text-base text-zinc-900 dark:text-white">Submit Academic Exemption Application</h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -100,35 +101,61 @@ export default function ClassLeavePage() {
             {/* Drag and Drop File Upload Simulation */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Medical Certificate / Supporting Document</label>
-              {file ? (
-                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span>{file} (Uploaded successfully)</span>
-                  </div>
-                  <button type="button" onClick={() => setFile(null)} className="text-rose-500 hover:underline">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => setFile('Dr_John_Medical_Certificate_2026.pdf')}
-                  className="p-8 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-violet-500 transition-all text-center cursor-pointer bg-zinc-50/50 dark:bg-zinc-900/30 space-y-2"
-                >
-                  <UploadCloud className="w-8 h-8 text-violet-500 mx-auto" />
-                  <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Click to upload or drag & drop medical certificate</p>
-                  <p className="text-[10px] text-zinc-400">Supported formats: PDF, PNG, JPG (Max 5MB)</p>
-                </div>
-              )}
+              <AnimatePresence mode="wait" initial={false}>
+                {file ? (
+                  <motion.div
+                    key="cert-uploaded"
+                    initial={{ opacity: 0, scale: 0.97, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, transition: { duration: 0.25, ease: 'easeIn' } }}
+                    transition={{ duration: 0.4, ease: EASE_OUT }}
+                    className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      <span>{file} (Uploaded successfully)</span>
+                    </div>
+                    <motion.button
+                      type="button"
+                      onClick={() => setFile(null)}
+                      whileTap={{ scale: 0.97 }}
+                      transition={springs.snappy}
+                      className="text-rose-500 hover:underline"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </motion.button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="cert-dropzone"
+                    onClick={() => setFile('Dr_John_Medical_Certificate_2026.pdf')}
+                    initial={{ opacity: 0, scale: 0.97, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, transition: { duration: 0.25, ease: 'easeIn' } }}
+                    transition={{ duration: 0.4, ease: EASE_OUT }}
+                    className="p-8 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-violet-500 transition-all text-center cursor-pointer bg-zinc-50/50 dark:bg-zinc-900/30 space-y-2"
+                  >
+                    <UploadCloud className="w-8 h-8 text-violet-500 mx-auto" />
+                    <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Click to upload or drag & drop medical certificate</p>
+                    <p className="text-[10px] text-zinc-400">Supported formats: PDF, PNG, JPG (Max 5MB)</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            <button type="submit" className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2">
+            <motion.button
+              type="submit"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
+              className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
+            >
               <Send className="w-4 h-4" /> Submit Class Leave Request
-            </button>
+            </motion.button>
           </form>
-        </div>
+        </StaggerItem>
 
-        <div className="glass-card p-6 rounded-3xl space-y-4">
+        <StaggerItem className="glass-card p-6 rounded-3xl space-y-4">
           <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-amber-500" />
             <span>Attendance Policy</span>
@@ -136,10 +163,12 @@ export default function ClassLeavePage() {
           <p className="text-xs text-zinc-500 leading-relaxed">
             Minimum 75% attendance is mandatory across all course credits. Medical leave exceeding 3 consecutive days requires physical endorsement from the Chavara Health Center.
           </p>
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
 
-      <DataTable columns={columns} data={classLeaves} title="Academic Leave History" />
+      <Reveal>
+        <DataTable columns={columns} data={classLeaves} title="Academic Leave History" />
+      </Reveal>
     </div>
   );
 }

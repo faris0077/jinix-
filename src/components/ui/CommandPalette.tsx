@@ -23,7 +23,7 @@ import {
   FileText,
   UserCheck
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, EASE_OUT, Stagger, StaggerItem } from '@/lib/motion';
 
 interface CommandPaletteProps {
   open: boolean;
@@ -65,10 +65,16 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
           <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 pointer-events-none">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
+              initial={{ opacity: 0, scale: 0.98, y: -10, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{
+                opacity: 0,
+                scale: 0.98,
+                y: -10,
+                filter: 'blur(4px)',
+                transition: { duration: 0.18, ease: 'easeIn' },
+              }}
+              transition={{ duration: 0.35, ease: EASE_OUT }}
               className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden pointer-events-auto"
             >
               <Command
@@ -98,7 +104,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     No results found for <span className="font-bold text-zinc-900 dark:text-white">"{search}"</span>.
                   </Command.Empty>
 
+                  <Stagger stagger={0.05} delay={0.05} className="space-y-2">
                   {/* Quick Role Switcher Group */}
+                  <StaggerItem className="[&:has([cmdk-group][hidden])]:hidden">
                   <Command.Group heading="⚡ Demo Role Switcher" className="px-2 py-1.5 text-xs font-bold text-zinc-400 uppercase">
                     {(['student', 'warden', 'director'] as const).map((role) => (
                       <Command.Item
@@ -119,8 +127,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       </Command.Item>
                     ))}
                   </Command.Group>
+                  </StaggerItem>
 
                   {/* Student Modules */}
+                  <StaggerItem className="[&:has([cmdk-group][hidden])]:hidden">
                   <Command.Group heading="🎓 Student Modules" className="px-2 py-1.5 text-xs font-bold text-zinc-400 uppercase">
                     {[
                       { name: 'Student Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
@@ -145,8 +155,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       );
                     })}
                   </Command.Group>
+                  </StaggerItem>
 
                   {/* Warden Modules */}
+                  <StaggerItem className="[&:has([cmdk-group][hidden])]:hidden">
                   <Command.Group heading="🛡️ Warden Modules" className="px-2 py-1.5 text-xs font-bold text-zinc-400 uppercase">
                     {[
                       { name: 'Warden Command Center', href: '/warden/dashboard', icon: LayoutDashboard },
@@ -169,8 +181,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       );
                     })}
                   </Command.Group>
+                  </StaggerItem>
 
                   {/* Director Modules */}
+                  <StaggerItem className="[&:has([cmdk-group][hidden])]:hidden">
                   <Command.Group heading="👔 Director Executive Suite" className="px-2 py-1.5 text-xs font-bold text-zinc-400 uppercase">
                     {[
                       { name: 'Executive C-Suite KPI Dashboard', href: '/director/dashboard', icon: BarChart3 },
@@ -189,6 +203,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       );
                     })}
                   </Command.Group>
+                  </StaggerItem>
+                  </Stagger>
                 </Command.List>
 
                 <div className="px-4 py-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/80 flex items-center justify-between text-[11px] text-zinc-500">

@@ -25,7 +25,6 @@ import {
   FileText,
   Building2,
   ChevronLeft,
-  ChevronRight,
   LogOut,
   Sparkles,
   ShieldCheck,
@@ -35,7 +34,7 @@ import {
   Bed,
   Megaphone
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, springs, EASE_OUT } from '@/lib/motion';
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -131,13 +130,20 @@ export function Sidebar() {
           </Link>
         )}
 
-        <button
+        <motion.button
           onClick={() => setIsCollapsed(!isCollapsed)}
+          whileTap={{ scale: 0.97 }}
+          transition={springs.snappy}
           className="w-7 h-7 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
           title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
-          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </button>
+          <ChevronLeft
+            className={cn(
+              'w-4 h-4 transition-transform duration-300',
+              isCollapsed && 'rotate-180'
+            )}
+          />
+        </motion.button>
       </div>
 
       {/* Role Indicator Banner */}
@@ -145,7 +151,7 @@ export function Sidebar() {
         <div className="px-3 pt-3">
           <div className="bg-gradient-to-r from-violet-600/10 via-purple-600/10 to-transparent border border-violet-500/20 rounded-xl p-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400 animate-pulse" />
+              <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
               <span className="text-xs font-semibold capitalize text-violet-900 dark:text-violet-300">
                 {currentUser.role} Portal
               </span>
@@ -187,39 +193,69 @@ export function Sidebar() {
                 }
               }}
               className={cn(
-                'group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                'group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200',
                 isActive
-                  ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-md shadow-violet-600/20 font-semibold'
+                  ? 'text-white font-semibold'
                   : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/60 hover:text-zinc-900 dark:hover:text-white'
               )}
               title={isCollapsed ? item.name : undefined}
             >
-              <Icon
-                className={cn(
-                  'w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110',
-                  isActive ? 'text-white' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-violet-600 dark:group-hover:text-violet-400'
-                )}
-              />
-
-              {!isCollapsed && (
-                <span className="flex-1 truncate">{item.name}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="sidebar-active-pill"
+                  transition={springs.soft}
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 shadow-md shadow-violet-600/20"
+                />
               )}
 
-              {!isCollapsed && item.badge && (
-                <span
+              <motion.span
+                whileHover={{ x: 2 }}
+                transition={springs.snappy}
+                className="relative z-10 flex flex-1 min-w-0 items-center gap-3"
+              >
+                <Icon
                   className={cn(
-                    'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide',
-                    isActive
-                      ? 'bg-white/20 text-white'
-                      : 'bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800'
+                    'w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110',
+                    isActive ? 'text-white' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-violet-600 dark:group-hover:text-violet-400'
                   )}
-                >
-                  {item.badge}
-                </span>
-              )}
+                />
+
+                <AnimatePresence initial={false}>
+                  {!isCollapsed && (
+                    <motion.span
+                      key="label"
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -6, transition: { duration: 0.15, ease: 'easeIn' } }}
+                      transition={{ duration: 0.25, ease: EASE_OUT }}
+                      className="flex-1 truncate"
+                    >
+                      {item.name}
+                    </motion.span>
+                  )}
+
+                  {!isCollapsed && item.badge && (
+                    <motion.span
+                      key="badge"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0, transition: { duration: 0.15, ease: 'easeIn' } }}
+                      transition={{ duration: 0.25, ease: EASE_OUT }}
+                      className={cn(
+                        'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide',
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800'
+                      )}
+                    >
+                      {item.badge}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.span>
 
               {isCollapsed && item.badge && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-violet-600 animate-ping" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-violet-600" />
               )}
             </Link>
           );
@@ -254,21 +290,32 @@ export function Sidebar() {
               </p>
               <div className="grid grid-cols-3 gap-1">
                 {(['student', 'warden', 'director'] as const).map((role) => (
-                  <button
+                  <motion.button
                     key={role}
                     onClick={() => {
                       switchRole(role);
                       router.push(`/${role}/dashboard`);
                     }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
                     className={cn(
-                      'text-[10px] py-1 rounded-lg font-bold uppercase transition-all',
+                      'relative text-[10px] py-1 rounded-lg font-bold uppercase transition-colors',
                       currentUser.role === role
-                        ? 'bg-violet-600 text-white shadow-sm'
+                        ? 'text-white'
                         : 'bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700'
                     )}
                   >
-                    {role === 'student' ? 'Stu' : role === 'warden' ? 'War' : 'Dir'}
-                  </button>
+                    {currentUser.role === role && (
+                      <motion.div
+                        layoutId="sidebar-role-pill"
+                        transition={springs.soft}
+                        className="absolute inset-0 rounded-lg bg-violet-600 shadow-sm"
+                      />
+                    )}
+                    <span className="relative z-10">
+                      {role === 'student' ? 'Stu' : role === 'warden' ? 'War' : 'Dir'}
+                    </span>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -281,17 +328,20 @@ export function Sidebar() {
               className="w-8 h-8 rounded-full object-cover ring-2 ring-violet-500/20"
               title={`${currentUser.name} (${currentUser.role})`}
             />
-            <button
+            <motion.button
               onClick={() => {
                 const nextRole = currentUser.role === 'student' ? 'warden' : currentUser.role === 'warden' ? 'director' : 'student';
                 switchRole(nextRole);
                 router.push(`/${nextRole}/dashboard`);
               }}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
               className="w-8 h-8 rounded-lg bg-zinc-200/80 dark:bg-zinc-800 hover:bg-violet-600 hover:text-white flex items-center justify-center text-xs font-bold uppercase transition-colors"
               title="Switch Demo Role"
             >
               <ArrowRightLeft className="w-3.5 h-3.5" />
-            </button>
+            </motion.button>
           </div>
         )}
       </div>

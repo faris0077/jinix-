@@ -17,7 +17,7 @@ import {
   Sparkles,
   Phone
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, springs, listItem, Stagger, StaggerItem, Reveal, EASE_OUT } from '@/lib/motion';
 import { toast } from 'sonner';
 
 export default function StudentOutpassPage() {
@@ -58,12 +58,12 @@ export default function StudentOutpassPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto animate-in fade-in duration-300">
+    <div className="space-y-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white flex items-center gap-3">
-            <MapPin className="w-7 h-7 text-violet-600 animate-bounce" />
+            <MapPin className="w-7 h-7 text-violet-600" />
             <span>Local Outing & Movement Log</span>
           </h1>
           <p className="text-sm text-zinc-500 mt-1">
@@ -79,9 +79,9 @@ export default function StudentOutpassPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <Stagger className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Register New Outing Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <StaggerItem className="lg:col-span-2 space-y-6">
           <div className="glass-card p-6 sm:p-8 rounded-3xl space-y-6 border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg">
             <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-4">
               <h3 className="font-extrabold text-lg text-zinc-900 dark:text-white flex items-center gap-2">
@@ -147,18 +147,21 @@ export default function StudentOutpassPage() {
                 </label>
               </div>
 
-              <button
+              <motion.button
                 type="submit"
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={springs.snappy}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-violet-600/25 transition-all flex items-center justify-center gap-2 mt-4"
               >
                 <Send className="w-4 h-4" /> Register Outing in Campus Log
-              </button>
+              </motion.button>
             </form>
           </div>
-        </div>
+        </StaggerItem>
 
         {/* Right Column: Active Status & Action */}
-        <div className="space-y-6">
+        <StaggerItem className="space-y-6">
           <div className="glass-card p-6 rounded-3xl space-y-4 border border-violet-500/30 relative overflow-hidden bg-gradient-to-br from-violet-900/10 via-purple-900/5 to-transparent">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">
@@ -168,42 +171,68 @@ export default function StudentOutpassPage() {
             </div>
 
             <div className="space-y-3 pt-2">
-              {isCurrentlyOut || (activeOutpass && activeOutpass.status === 'approved') ? (
-                <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-2">
-                    <div className="flex items-center gap-2 font-bold text-sm">
-                      <Clock className="w-4 h-4 text-amber-500 animate-spin" />
-                      <span>Currently Logged Outside Campus</span>
-                    </div>
-                    <p className="text-xs leading-relaxed">
-                      Warden has signed off on your outing to <strong className="font-bold">{activeOutpass?.destination || 'City Center'}</strong>. Please ensure return before 08:30 PM curfew.
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={handleMarkReturn}
-                    className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2"
+              <AnimatePresence mode="wait" initial={false}>
+                {isCurrentlyOut || (activeOutpass && activeOutpass.status === 'approved') ? (
+                  <motion.div
+                    key="status-out"
+                    initial={{ opacity: 0, scale: 0.97, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, transition: { duration: 0.25, ease: 'easeIn' } }}
+                    transition={{ duration: 0.4, ease: EASE_OUT }}
+                    className="space-y-4"
                   >
-                    <CheckCircle2 className="w-5 h-5" /> Mark Returned to Room {currentUser.roomNumber || '304A'}
-                  </button>
-                </div>
-              ) : activeOutpass && activeOutpass.status === 'pending' ? (
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200 space-y-2 text-center">
-                  <Clock className="w-8 h-8 text-amber-500 mx-auto animate-pulse" />
-                  <p className="font-bold text-sm">Warden Review Pending</p>
-                  <p className="text-xs text-amber-700 dark:text-amber-300">
-                    Your request for {activeOutpass.destination} is currently being reviewed by Dr. Sr. Mary Thomas.
-                  </p>
-                </div>
-              ) : (
-                <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2">
-                  <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
-                  <p className="font-bold text-sm text-emerald-900 dark:text-emerald-200">Present Inside Campus</p>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                    You are checked into Room {currentUser.roomNumber || '304A'} (Block B). No active outings logged.
-                  </p>
-                </div>
-              )}
+                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-2">
+                      <div className="flex items-center gap-2 font-bold text-sm">
+                        <Clock className="w-4 h-4 text-amber-500" />
+                        <span>Currently Logged Outside Campus</span>
+                      </div>
+                      <p className="text-xs leading-relaxed">
+                        Warden has signed off on your outing to <strong className="font-bold">{activeOutpass?.destination || 'City Center'}</strong>. Please ensure return before 08:30 PM curfew.
+                      </p>
+                    </div>
+
+                    <motion.button
+                      onClick={handleMarkReturn}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.97 }}
+                      transition={springs.snappy}
+                      className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle2 className="w-5 h-5" /> Mark Returned to Room {currentUser.roomNumber || '304A'}
+                    </motion.button>
+                  </motion.div>
+                ) : activeOutpass && activeOutpass.status === 'pending' ? (
+                  <motion.div
+                    key="status-pending"
+                    initial={{ opacity: 0, scale: 0.97, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, transition: { duration: 0.25, ease: 'easeIn' } }}
+                    transition={{ duration: 0.4, ease: EASE_OUT }}
+                    className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200 space-y-2 text-center"
+                  >
+                    <Clock className="w-8 h-8 text-amber-500 mx-auto" />
+                    <p className="font-bold text-sm">Warden Review Pending</p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      Your request for {activeOutpass.destination} is currently being reviewed by Dr. Sr. Mary Thomas.
+                    </p>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="status-present"
+                    initial={{ opacity: 0, scale: 0.97, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, transition: { duration: 0.25, ease: 'easeIn' } }}
+                    transition={{ duration: 0.4, ease: EASE_OUT }}
+                    className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2"
+                  >
+                    <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
+                    <p className="font-bold text-sm text-emerald-900 dark:text-emerald-200">Present Inside Campus</p>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                      You are checked into Room {currentUser.roomNumber || '304A'} (Block B). No active outings logged.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -218,22 +247,31 @@ export default function StudentOutpassPage() {
               <li>For overnight stays out of station, please use the <strong>Home Leave</strong> module.</li>
             </ul>
           </div>
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
 
       {/* Outing History Register */}
-      <div className="glass-card p-6 rounded-3xl space-y-4 border border-zinc-200/80 dark:border-zinc-800/80">
+      <Reveal className="glass-card p-6 rounded-3xl space-y-4 border border-zinc-200/80 dark:border-zinc-800/80">
         <h3 className="font-extrabold text-base text-zinc-900 dark:text-white flex items-center gap-2">
           <History className="w-5 h-5 text-violet-600" />
           <span>Past Local Outing History Log</span>
         </h3>
 
         <div className="space-y-2 pt-1">
-          {outpassHistory.length === 0 ? (
+          {outpassHistory.length === 0 && (
             <p className="text-xs text-zinc-500 italic py-4 text-center">No past outings logged in this semester.</p>
-          ) : (
-            outpassHistory.map((item) => (
-              <div key={item.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          )}
+          <AnimatePresence initial={false}>
+            {outpassHistory.map((item) => (
+              <motion.div
+                key={item.id}
+                variants={listItem}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                layout
+                className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-sm text-zinc-900 dark:text-white">{item.destination || 'City Center'}</span>
@@ -252,11 +290,11 @@ export default function StudentOutpassPage() {
                     <p className="text-amber-500 font-semibold italic">Awaiting Gate Check-in</p>
                   )}
                 </div>
-              </div>
-            ))
-          )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

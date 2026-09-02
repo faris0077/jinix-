@@ -29,6 +29,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence, springs, EASE_OUT } from '@/lib/motion';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -129,19 +130,31 @@ export function DataTable<TData, TValue>({
         <div className="flex items-center gap-2 self-end sm:self-auto">
           {/* Column Visibility Dropdown */}
           <div className="relative">
-            <button
+            <motion.button
               onClick={() => setIsColMenuOpen(!isColMenuOpen)}
-              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm text-zinc-700 dark:text-zinc-300"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-700 dark:text-zinc-300"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-violet-500" />
               <span>Columns</span>
               <ChevronDown className="w-3 h-3 text-zinc-400" />
-            </button>
+            </motion.button>
 
             {isColMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setIsColMenuOpen(false)} />
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-xl p-2 z-20 space-y-1">
+              <div className="fixed inset-0 z-10" onClick={() => setIsColMenuOpen(false)} />
+            )}
+            <AnimatePresence>
+              {isColMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.97, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.97, y: -6, transition: { duration: 0.15, ease: 'easeIn' } }}
+                  transition={{ duration: 0.25, ease: EASE_OUT }}
+                  style={{ transformOrigin: 'top right' }}
+                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-xl p-2 z-20 space-y-1"
+                >
                   <p className="text-[10px] font-bold text-zinc-400 uppercase px-2 py-1">Toggle Columns</p>
                   {table
                     .getAllColumns()
@@ -160,35 +173,49 @@ export function DataTable<TData, TValue>({
                         <span className="truncate">{col.id.replace(/_/g, ' ')}</span>
                       </label>
                     ))}
-                </div>
-              </>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Export Buttons */}
-          <button
+          <motion.button
             onClick={exportToCSV}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm text-zinc-700 dark:text-zinc-300"
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            transition={springs.snappy}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-700 dark:text-zinc-300"
             title="Export as CSV"
           >
             <Download className="w-3.5 h-3.5 text-emerald-500" />
             <span>CSV</span>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
             onClick={exportToExcel}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all shadow-sm text-zinc-700 dark:text-zinc-300"
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            transition={springs.snappy}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-700 dark:text-zinc-300"
             title="Export as Excel"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
             <span>Excel</span>
-          </button>
+          </motion.button>
         </div>
       </div>
 
       {/* Bulk Action Banner */}
+      <AnimatePresence initial={false}>
       {selectedCount > 0 && (
-        <div className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+        <motion.div
+          key="bulk-actions"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8, transition: { duration: 0.2, ease: 'easeIn' } }}
+          transition={{ duration: 0.3, ease: EASE_OUT }}
+          className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-between gap-4"
+        >
           <div className="flex items-center gap-2 text-xs font-bold">
             <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
             <span>{selectedCount} item(s) selected</span>
@@ -239,8 +266,9 @@ export function DataTable<TData, TValue>({
               Clear selection
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Table Container */}
       <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-hidden shadow-sm">
@@ -281,8 +309,12 @@ export function DataTable<TData, TValue>({
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-zinc-700 dark:text-zinc-300">
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <tr
+                  <motion.tr
                     key={row.id}
+                    layout="position"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={springs.soft}
                     data-state={row.getIsSelected() && 'selected'}
                     className={cn(
                       'transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40',
@@ -294,13 +326,13 @@ export function DataTable<TData, TValue>({
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
-                  </tr>
+                  </motion.tr>
                 ))
               ) : (
                 <tr>
                   <td colSpan={columns.length} className="h-48 text-center text-zinc-500">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <Sparkles className="w-8 h-8 text-zinc-300 dark:text-zinc-700 animate-pulse" />
+                      <Sparkles className="w-8 h-8 text-zinc-300 dark:text-zinc-700" />
                       <p className="font-semibold">No records found</p>
                       <p className="text-xs text-zinc-400">Try adjusting your search filter or adding new entries.</p>
                     </div>
@@ -336,22 +368,26 @@ export function DataTable<TData, TValue>({
             </span>
 
             <div className="flex items-center gap-1">
-              <button
+              <motion.button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                whileTap={{ scale: 0.97 }}
+                transition={springs.snappy}
+                className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Previous Page"
               >
                 <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                whileTap={{ scale: 0.97 }}
+                transition={springs.snappy}
+                className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Next Page"
               >
                 <ChevronRight className="w-4 h-4" />
-              </button>
+              </motion.button>
             </div>
           </div>
         </div>

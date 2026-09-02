@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { format } from 'date-fns';
 import { useChavaraStore } from '@/lib/store';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { DataTable } from '@/components/ui/DataTable';
@@ -19,7 +20,7 @@ import {
   AlertCircle,
   FileText
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, springs, fadeUp, EASE_OUT, Reveal } from '@/lib/motion';
 import { toast } from 'sonner';
 
 export default function LeaveRequestsPage() {
@@ -110,12 +111,12 @@ export default function LeaveRequestsPage() {
     {
       accessorKey: 'createdAt',
       header: 'Submitted On',
-      cell: ({ row }) => <span className="text-xs text-zinc-400">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
+      cell: ({ row }) => <span className="text-xs text-zinc-400">{format(new Date(row.original.createdAt), 'd MMM yyyy')}</span>,
     },
   ];
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-300">
+    <div className="space-y-10">
       {/* Page Header */}
       <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
@@ -128,7 +129,12 @@ export default function LeaveRequestsPage() {
       </div>
 
       {/* Multi-step Wizard Card */}
-      <div className="glass-card p-6 sm:p-8 rounded-3xl space-y-8 max-w-3xl mx-auto shadow-xl border-violet-500/20 relative overflow-hidden">
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        className="glass-card p-6 sm:p-8 rounded-3xl space-y-8 max-w-3xl mx-auto shadow-xl border-violet-500/20 relative overflow-hidden"
+      >
         <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Step Progress Indicator */}
@@ -174,6 +180,7 @@ export default function LeaveRequestsPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.35, ease: EASE_OUT }}
                 className="space-y-4"
               >
                 <h3 className="font-bold text-base text-zinc-900 dark:text-white">Select Leave Category</h3>
@@ -184,31 +191,44 @@ export default function LeaveRequestsPage() {
                     { id: 'outpass', title: 'Local Outing Log', desc: 'City mall, hospital, shopping (4-6 hours)' },
                     { id: 'library', title: 'Library Study Register', desc: 'Academic study after curfew (till 11 PM)' },
                   ].map((cat) => (
-                    <div
+                    <motion.div
                       key={cat.id}
                       onClick={() => setType(cat.id as any)}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={springs.snappy}
                       className={cn(
-                        'p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2',
+                        'relative p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2',
                         type === cat.id
-                          ? 'bg-violet-50 dark:bg-violet-950/60 border-violet-600 text-violet-900 dark:text-white ring-2 ring-violet-500/30 shadow-md'
+                          ? 'border-violet-600 text-violet-900 dark:text-white'
                           : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300'
                       )}
                     >
-                      <span className="font-bold text-sm">{cat.title}</span>
-                      <span className="text-xs text-zinc-500">{cat.desc}</span>
-                    </div>
+                      {type === cat.id && (
+                        <motion.div
+                          layoutId="leave-category-pill"
+                          transition={springs.soft}
+                          className="absolute inset-0 rounded-2xl bg-violet-50 dark:bg-violet-950/60 ring-2 ring-violet-500/30 shadow-md"
+                        />
+                      )}
+                      <span className="relative font-bold text-sm">{cat.title}</span>
+                      <span className="relative text-xs text-zinc-500">{cat.desc}</span>
+                    </motion.div>
                   ))}
                 </div>
 
                 <div className="flex justify-end pt-4">
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => setStep(2)}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
                     className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
                   >
                     <span>Next: Choose Timings</span>
                     <ChevronRight className="w-4 h-4" />
-                  </button>
+                  </motion.button>
                 </div>
               </motion.div>
             )}
@@ -219,6 +239,7 @@ export default function LeaveRequestsPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.35, ease: EASE_OUT }}
                 className="space-y-4"
               >
                 <h3 className="font-bold text-base text-zinc-900 dark:text-white">Specify Dates & Time Windows</h3>
@@ -271,21 +292,27 @@ export default function LeaveRequestsPage() {
                 </div>
 
                 <div className="flex justify-between pt-4">
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => setStep(1)}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
                     className="px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 font-bold text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all flex items-center gap-1.5"
                   >
                     <ChevronLeft className="w-4 h-4" /> Back
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     type="button"
                     onClick={() => setStep(3)}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
                     className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
                   >
                     <span>Next: Reason & Submit</span>
                     <ChevronRight className="w-4 h-4" />
-                  </button>
+                  </motion.button>
                 </div>
               </motion.div>
             )}
@@ -296,6 +323,7 @@ export default function LeaveRequestsPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.35, ease: EASE_OUT }}
                 className="space-y-4"
               >
                 <h3 className="font-bold text-base text-zinc-900 dark:text-white">Reason & Destination Details</h3>
@@ -329,29 +357,35 @@ export default function LeaveRequestsPage() {
                 </div>
 
                 <div className="flex justify-between pt-4">
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => setStep(2)}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
                     className="px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 font-bold text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all flex items-center gap-1.5"
                   >
                     <ChevronLeft className="w-4 h-4" /> Back
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     type="submit"
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
                     className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-violet-600/30 transition-all flex items-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     <span>Submit Application</span>
-                  </button>
+                  </motion.button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </form>
-      </div>
+      </motion.div>
 
       {/* History Table */}
-      <div className="space-y-4 pt-4">
+      <Reveal className="space-y-4 pt-4">
         <h2 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
           <FileText className="w-5 h-5 text-violet-600" />
           <span>Application History & Approval Status</span>
@@ -362,7 +396,7 @@ export default function LeaveRequestsPage() {
           searchPlaceholder="Search leave reason or destination..."
           title="My Leave Applications"
         />
-      </div>
+      </Reveal>
     </div>
   );
 }

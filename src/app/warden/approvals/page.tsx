@@ -20,6 +20,7 @@ import {
   FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, springs, AnimatedNumber, Reveal } from '@/lib/motion';
 
 export default function WardenApprovalsPage() {
   const { studentLeaves, approveLeave, rejectLeave, bulkApproveLeaves, bulkRejectLeaves, logStudentReturn } = useChavaraStore();
@@ -143,13 +144,16 @@ export default function WardenApprovalsPage() {
             );
           }
           return (
-            <button
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
               onClick={() => logStudentReturn(item.studentId)}
-              className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1"
+              className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-sm transition-colors flex items-center gap-1"
               title="Mark Student Returned & Arrived at Security Gate"
             >
               <UserCheck className="w-3.5 h-3.5" /> Mark Arrived at Gate
-            </button>
+            </motion.button>
           );
         }
         if (item.status !== 'pending') {
@@ -157,20 +161,26 @@ export default function WardenApprovalsPage() {
         }
         return (
           <div className="flex items-center gap-1.5">
-            <button
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
               onClick={() => handleApprove(item.id, item.studentName || 'Student')}
-              className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1"
+              className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-sm transition-colors flex items-center gap-1"
               title="Approve Pass"
             >
               <CheckCircle2 className="w-3.5 h-3.5" /> Approve
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
               onClick={() => handleReject(item.id, item.studentName || 'Student')}
-              className="px-3 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1"
+              className="px-3 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-sm transition-colors flex items-center gap-1"
               title="Reject Application"
             >
               <XCircle className="w-3.5 h-3.5" /> Reject
-            </button>
+            </motion.button>
           </div>
         );
       },
@@ -178,7 +188,7 @@ export default function WardenApprovalsPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
@@ -193,8 +203,8 @@ export default function WardenApprovalsPage() {
 
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-3 py-1.5 rounded-xl border border-amber-300/40 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 animate-pulse" />
-            {studentLeaves.filter((l) => l.status === 'pending').length} Pending in Queue
+            <Clock className="w-3.5 h-3.5" />
+            <AnimatedNumber value={studentLeaves.filter((l) => l.status === 'pending').length} format={(v) => `${Math.round(v)}`} /> Pending in Queue
           </span>
         </div>
       </div>
@@ -209,21 +219,30 @@ export default function WardenApprovalsPage() {
             { id: 'approved', label: 'Approved', count: studentLeaves.filter((l) => l.status === 'approved').length },
             { id: 'rejected', label: 'Rejected', count: studentLeaves.filter((l) => l.status === 'rejected').length },
           ].map((tab) => (
-            <button
+            <motion.button
               key={tab.id}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
               onClick={() => setFilter(tab.id as any)}
               className={cn(
-                'px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5',
+                'relative px-3.5 py-1.5 rounded-xl font-bold text-xs transition-colors flex items-center gap-1.5',
                 filter === tab.id
-                  ? 'bg-violet-600 text-white shadow-md shadow-violet-600/20'
+                  ? 'text-white'
                   : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               )}
             >
-              <span>{tab.label}</span>
-              <span className={cn('px-1.5 py-0.2 rounded-full text-[10px]', filter === tab.id ? 'bg-white/20 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500')}>
+              {filter === tab.id && (
+                <motion.div
+                  layoutId="approvals-status-pill"
+                  className="absolute inset-0 rounded-xl bg-violet-600 shadow-md shadow-violet-600/20"
+                  transition={springs.soft}
+                />
+              )}
+              <span className="relative z-10">{tab.label}</span>
+              <span className={cn('relative z-10 px-1.5 py-0.5 rounded-full text-[10px]', filter === tab.id ? 'bg-white/20 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500')}>
                 {tab.count}
               </span>
-            </button>
+            </motion.button>
           ))}
         </div>
 
@@ -244,22 +263,24 @@ export default function WardenApprovalsPage() {
       </div>
 
       {/* TanStack Table with Bulk Actions */}
-      <DataTable
-        columns={columns}
-        data={filteredData}
-        searchPlaceholder="Search student name, room number, or destination..."
-        onBulkApprove={(ids) => {
-          bulkApproveLeaves(ids);
-          toast.success(`Bulk approved ${ids.length} applications!`, {
-            description: 'Movement registers updated for all selected residents.',
-          });
-        }}
-        onBulkReject={(ids) => {
-          bulkRejectLeaves(ids);
-          toast.error(`Bulk rejected ${ids.length} applications.`);
-        }}
-        title="Student Applications Queue"
-      />
+      <Reveal>
+        <DataTable
+          columns={columns}
+          data={filteredData}
+          searchPlaceholder="Search student name, room number, or destination..."
+          onBulkApprove={(ids) => {
+            bulkApproveLeaves(ids);
+            toast.success(`Bulk approved ${ids.length} applications!`, {
+              description: 'Movement registers updated for all selected residents.',
+            });
+          }}
+          onBulkReject={(ids) => {
+            bulkRejectLeaves(ids);
+            toast.error(`Bulk rejected ${ids.length} applications.`);
+          }}
+          title="Student Applications Queue"
+        />
+      </Reveal>
     </div>
   );
 }

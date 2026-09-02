@@ -7,6 +7,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { User } from '@/lib/mock-data';
 import { Users, Mail, Phone, Building2, GraduationCap, ExternalLink, ShieldCheck, X } from 'lucide-react';
+import { motion, AnimatePresence, springs, EASE_OUT, Reveal } from '@/lib/motion';
 
 export default function WardenStudentsPage() {
   const { users } = useChavaraStore();
@@ -71,19 +72,22 @@ export default function WardenStudentsPage() {
       id: 'actions',
       header: 'Profile Modal',
       cell: ({ row }) => (
-        <button
+        <motion.button
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.97 }}
+          transition={springs.snappy}
           onClick={() => setSelectedStudent(row.original)}
-          className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-violet-600 hover:text-white text-zinc-700 dark:text-zinc-300 font-bold text-xs transition-all flex items-center gap-1.5"
+          className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-violet-600 hover:text-white text-zinc-700 dark:text-zinc-300 font-bold text-xs transition-colors flex items-center gap-1.5"
         >
           <span>View Profile</span>
           <ExternalLink className="w-3 h-3" />
-        </button>
+        </motion.button>
       ),
     },
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8">
       <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
           <Users className="w-6 h-6 text-violet-600" />
@@ -94,23 +98,41 @@ export default function WardenStudentsPage() {
         </p>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={students}
-        searchPlaceholder="Search resident name, email, course, or room number..."
-        title="Block B Resident Scholars Directory"
-      />
+      <Reveal>
+        <DataTable
+          columns={columns}
+          data={students}
+          searchPlaceholder="Search resident name, email, course, or room number..."
+          title="Block B Resident Scholars Directory"
+        />
+      </Reveal>
 
       {/* Student Profile Modal */}
+      <AnimatePresence>
       {selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative">
-            <button
+        <motion.div
+          key="student-profile-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25, ease: EASE_OUT }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: 8, transition: { duration: 0.25, ease: 'easeIn' } }}
+            transition={{ duration: 0.45, ease: EASE_OUT }}
+            className="bg-white dark:bg-zinc-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative"
+          >
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
               onClick={() => setSelectedStudent(null)}
               className="absolute top-6 right-6 p-2 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
             >
               <X className="w-4 h-4" />
-            </button>
+            </motion.button>
 
             <div className="flex items-center gap-4">
               <img src={selectedStudent.avatar} alt={selectedStudent.name} className="w-16 h-16 rounded-2xl object-cover ring-4 ring-violet-500/20" />
@@ -128,16 +150,20 @@ export default function WardenStudentsPage() {
             </div>
 
             <div className="flex justify-end pt-2">
-              <button
+              <motion.button
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={springs.snappy}
                 onClick={() => setSelectedStudent(null)}
-                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition-all"
+                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition-colors"
               >
                 Close Profile
-              </button>
+              </motion.button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   Printer
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, springs, fadeUp, hoverLift, Stagger, TiltCard } from '@/lib/motion';
 
 export default function DirectorReportsPage() {
   const { feePayments, studentLeaves, complaints, rooms } = useChavaraStore();
@@ -77,7 +78,7 @@ export default function DirectorReportsPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 max-w-5xl mx-auto">
+    <div className="space-y-8 max-w-5xl mx-auto">
       <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white flex items-center gap-3">
           <FileText className="w-7 h-7 text-violet-600" />
@@ -89,6 +90,7 @@ export default function DirectorReportsPage() {
       </div>
 
       {/* Quick Action Top Bar */}
+      <TiltCard max={4}>
       <div className="p-6 rounded-3xl bg-gradient-to-r from-violet-900 via-purple-900 to-zinc-950 text-white shadow-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-6">
         <div className="space-y-1">
           <span className="text-xs font-bold uppercase tracking-wider text-violet-300 flex items-center gap-1.5">
@@ -98,26 +100,32 @@ export default function DirectorReportsPage() {
           <p className="text-xs text-zinc-300">Includes all 5 departmental audit reports bundled in a single verified PDF zip.</p>
         </div>
 
-        <button
+        <motion.button
           onClick={() => handleDownloadReport('Chavara_Q3_Master_Dossier_2026', 'PDF')}
-          className="px-6 py-3 rounded-2xl bg-white text-violet-900 font-bold text-sm shadow-lg hover:bg-violet-50 transition-all flex items-center justify-center gap-2 shrink-0"
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.97 }}
+          transition={springs.snappy}
+          className="px-6 py-3 rounded-2xl bg-white text-violet-900 font-bold text-sm shadow-lg hover:bg-violet-50 transition-colors flex items-center justify-center gap-2 shrink-0"
         >
           <Printer className="w-4 h-4 text-violet-700" />
           <span>Download Master PDF Bundle</span>
-        </button>
+        </motion.button>
       </div>
+      </TiltCard>
 
       {/* Report Categories List */}
       <div className="space-y-4">
         <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">Departmental Audit Reports</h3>
 
-        <div className="space-y-4">
+        <Stagger className="space-y-4">
           {reportCategories.map((rep) => {
             const Icon = rep.icon;
             return (
-              <div
+              <motion.div
                 key={rep.id}
-                className="glass-card p-6 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 hover:border-violet-500/40 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
+                variants={fadeUp}
+                {...hoverLift}
+                className="glass-card p-6 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 hover:border-violet-500/40 transition-[border-color] flex flex-col md:flex-row md:items-center justify-between gap-6"
               >
                 <div className="flex items-start gap-4 flex-1">
                   <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${rep.color} flex items-center justify-center text-white shrink-0 shadow-lg`}>
@@ -138,23 +146,29 @@ export default function DirectorReportsPage() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
-                  <button
+                  <motion.button
                     onClick={() => handleDownloadReport(rep.title, 'PDF')}
-                    className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
+                    className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5"
                   >
                     <Download className="w-3.5 h-3.5" /> PDF
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     onClick={() => handleDownloadReport(rep.title, 'EXCEL')}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5" /> XLS
-                  </button>
+                  </motion.button>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </Stagger>
       </div>
     </div>
   );

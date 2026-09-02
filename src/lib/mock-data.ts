@@ -73,6 +73,7 @@ export interface ExternalDelivery {
 
 export interface FeePayment {
   id: string;
+  studentId?: string;
   title: string;
   amount: number;
   dueDate: string;
@@ -469,6 +470,7 @@ export const INITIAL_DELIVERIES: ExternalDelivery[] = [
 export const INITIAL_FEES: FeePayment[] = [
   {
     id: 'FEE-2026-01',
+    studentId: 'student-1',
     title: 'Semester 6 Tuition & Hostel Accommodation Fee',
     amount: 1250,
     dueDate: '2026-07-10',
@@ -479,6 +481,7 @@ export const INITIAL_FEES: FeePayment[] = [
   },
   {
     id: 'FEE-2026-02',
+    studentId: 'student-1',
     title: 'Quarterly Mess Advance & Kitchen Maintenance',
     amount: 450,
     dueDate: '2026-07-15',
@@ -489,6 +492,7 @@ export const INITIAL_FEES: FeePayment[] = [
   },
   {
     id: 'FEE-2026-03',
+    studentId: 'student-1',
     title: 'Monsoon Semester Amenities & High-Speed Wi-Fi Fee',
     amount: 150,
     dueDate: '2026-07-31',
@@ -686,7 +690,7 @@ export const INITIAL_NOTICES: Notice[] = [
     priority: 'urgent',
     targetAudience: 'B',
     author: 'Dr. Sr. Mary Thomas',
-    date: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
+    date: '2026-09-01T10:00:00Z',
   },
   {
     id: 'NOTICE-002',
@@ -695,6 +699,6 @@ export const INITIAL_NOTICES: Notice[] = [
     priority: 'high',
     targetAudience: 'All',
     author: 'Dr. Sr. Mary Thomas',
-    date: new Date(Date.now() - 3600000 * 48).toISOString(), // 2 days ago
+    date: '2026-08-31T18:30:00Z',
   }
 ];

@@ -1,8 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
+import { format } from 'date-fns';
 import { useChavaraStore } from '@/lib/store';
 import { Search, Package, Plus, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import {
+  motion,
+  AnimatePresence,
+  listItem,
+  hoverLift,
+  fadeIn,
+  springs,
+  EASE_OUT,
+} from '@/lib/motion';
 
 export default function LostFoundPage() {
   const { lostFoundItems, reportLostFoundItem, resolveLostFoundItem, currentUser } = useChavaraStore();
@@ -37,7 +47,7 @@ export default function LostFoundPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -49,13 +59,16 @@ export default function LostFoundPage() {
             Report lost items or post items you've found on campus.
           </p>
         </div>
-        <button
+        <motion.button
           onClick={() => setIsModalOpen(true)}
-          className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold flex items-center gap-2 shadow-lg shadow-violet-600/20 transition-all active:scale-95"
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.97 }}
+          transition={springs.snappy}
+          className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold flex items-center gap-2 shadow-lg shadow-violet-600/20 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Report Item
-        </button>
+        </motion.button>
       </div>
 
       {/* Tabs */}
@@ -64,23 +77,37 @@ export default function LostFoundPage() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-6 py-2 rounded-lg text-sm font-bold capitalize transition-all ${
+            className={`relative px-6 py-2 rounded-lg text-sm font-bold capitalize transition-colors ${
               activeTab === tab
-                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
+                ? 'text-zinc-900 dark:text-white'
                 : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
-            {tab}
+            {activeTab === tab && (
+              <motion.div
+                layoutId="lost-found-tab-pill"
+                className="absolute inset-0 rounded-lg bg-white dark:bg-zinc-800 shadow-sm"
+                transition={springs.soft}
+              />
+            )}
+            <span className="relative z-10">{tab}</span>
           </button>
         ))}
       </div>
 
       {/* Items Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <AnimatePresence initial={false}>
         {filteredItems.map((item) => (
-          <div
+          <motion.div
             key={item.id}
-            className={`glass-card p-5 rounded-3xl space-y-4 relative overflow-hidden border-2 transition-all ${
+            variants={listItem}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            layout
+            {...hoverLift}
+            className={`glass-card p-5 rounded-3xl space-y-4 relative overflow-hidden border-2 transition-colors ${
               item.status === 'resolved' 
                 ? 'border-emerald-500/20 opacity-70' 
                 : item.type === 'lost' 
@@ -126,37 +153,59 @@ export default function LostFoundPage() {
               <div className="text-right">
                 <span className="block text-zinc-400">Date</span>
                 <span className="font-medium text-zinc-900 dark:text-zinc-300">
-                  {new Date(item.date).toLocaleDateString()}
+                  {format(new Date(item.date), 'd MMM yyyy')}
                 </span>
               </div>
             </div>
 
             {item.status === 'open' && item.studentId === currentUser.id && (
               <div className="pt-2">
-                <button
+                <motion.button
                   onClick={() => resolveLostFoundItem(item.id)}
+                  whileTap={{ scale: 0.97 }}
+                  transition={springs.snappy}
                   className="w-full py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-white transition-colors text-sm font-bold flex justify-center items-center gap-2"
                 >
                   <CheckCircle2 className="w-4 h-4" /> Mark as Resolved
-                </button>
+                </motion.button>
               </div>
             )}
-          </div>
+          </motion.div>
         ))}
+        </AnimatePresence>
       </div>
 
       {filteredItems.length === 0 && (
-        <div className="text-center py-20 bg-zinc-50 dark:bg-zinc-900/50 rounded-3xl border border-zinc-200 dark:border-zinc-800">
+        <motion.div
+          variants={fadeIn}
+          initial="hidden"
+          animate="visible"
+          className="text-center py-20 bg-zinc-50 dark:bg-zinc-900/50 rounded-3xl border border-zinc-200 dark:border-zinc-800"
+        >
           <Search className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white">No items found</h3>
           <p className="text-zinc-500">There are no {activeTab !== 'all' ? activeTab : ''} items reported currently.</p>
-        </div>
+        </motion.div>
       )}
 
       {/* Modal for reporting item */}
+      <AnimatePresence>
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 w-full max-w-lg rounded-3xl shadow-2xl p-6 sm:p-8 relative">
+        <motion.div
+          key="report-item-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25, ease: EASE_OUT }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 8 }}
+            transition={{ duration: 0.4, ease: EASE_OUT }}
+            className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 w-full max-w-lg rounded-3xl shadow-2xl p-6 sm:p-8 relative"
+          >
             <h2 className="text-2xl font-extrabold text-zinc-900 dark:text-white mb-6">Report Item</h2>
             
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -211,24 +260,31 @@ export default function LostFoundPage() {
               </div>
 
               <div className="pt-4 flex gap-3">
-                <button
+                <motion.button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={springs.snappy}
                   className="flex-1 px-4 py-3 rounded-xl font-bold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
                 >
                   Cancel
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   type="submit"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={springs.snappy}
                   className="flex-1 px-4 py-3 rounded-xl font-bold text-white bg-violet-600 hover:bg-violet-700 transition-colors shadow-lg shadow-violet-600/20"
                 >
                   Submit Post
-                </button>
+                </motion.button>
               </div>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,9 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
+import { format } from 'date-fns';
 import { useChavaraStore } from '@/lib/store';
 import { Bed, ArrowRightLeft, Clock, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import {
+  motion,
+  AnimatePresence,
+  Stagger,
+  StaggerItem,
+  listItem,
+  springs,
+  EASE_OUT,
+} from '@/lib/motion';
 
 export default function RoomChangePage() {
   const { currentUser, submitRoomChangeRequest, rooms } = useChavaraStore();
@@ -16,7 +26,7 @@ export default function RoomChangePage() {
   // Let's assume I need to fetch it.
   
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8">
       <RoomChangeContent />
     </div>
   );
@@ -56,9 +66,9 @@ function RoomChangeContent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <Stagger className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <StaggerItem className="lg:col-span-2 space-y-6">
           <div className="glass-card p-6 rounded-3xl">
             <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">Submit New Request</h2>
             
@@ -99,48 +109,71 @@ function RoomChangeContent() {
                 />
               </div>
 
-              <button
+              <motion.button
                 type="submit"
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={springs.snappy}
                 className="w-full px-4 py-3 rounded-xl font-bold text-white bg-violet-600 hover:bg-violet-700 transition-colors shadow-lg shadow-violet-600/20 flex items-center justify-center gap-2"
               >
                 <ArrowRightLeft className="w-4 h-4" /> Submit Transfer Request
-              </button>
+              </motion.button>
             </form>
           </div>
-        </div>
+        </StaggerItem>
 
         {/* Right Column: History */}
-        <div className="space-y-6">
+        <StaggerItem className="space-y-6">
           <div className="glass-card p-6 rounded-3xl">
             <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">Request History</h2>
             
             <div className="space-y-4">
-              {myRequests.length === 0 ? (
+              {myRequests.length === 0 && (
                 <p className="text-sm text-zinc-500 text-center py-8">No previous room change requests.</p>
-              ) : (
-                myRequests.map((req: any) => (
-                  <div key={req.id} className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                        To: Block {req.requestedBlock}
-                      </span>
-                      {req.status === 'pending' && <StatusBadge status="pending" size="sm" />}
-                      {req.status === 'approved' && <StatusBadge status="approved" size="sm" />}
-                      {req.status === 'rejected' && <StatusBadge status="rejected" size="sm" />}
-                    </div>
-                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-300 line-clamp-2">
-                      "{req.reason}"
-                    </p>
-                    <p className="text-xs text-zinc-400 mt-2">
-                      Submitted on {new Date(req.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))
               )}
+              <AnimatePresence initial={false}>
+                  {myRequests.map((req: any) => (
+                    <motion.div
+                      key={req.id}
+                      variants={listItem}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      layout
+                      className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                          To: Block {req.requestedBlock}
+                        </span>
+                        <AnimatePresence mode="wait" initial={false}>
+                          <motion.span
+                            key={req.status}
+                            className="inline-block"
+                            initial={{ opacity: 0, scale: 0.97, y: 4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.97, y: -4 }}
+                            transition={{ duration: 0.3, ease: EASE_OUT }}
+                          >
+                            {req.status === 'pending' && <StatusBadge status="pending" size="sm" />}
+                            {req.status === 'approved' && <StatusBadge status="approved" size="sm" />}
+                            {req.status === 'rejected' && <StatusBadge status="rejected" size="sm" />}
+                          </motion.span>
+                        </AnimatePresence>
+                      </div>
+                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-300 line-clamp-2">
+                        "{req.reason}"
+                      </p>
+                      <p className="text-xs text-zinc-400 mt-2">
+                        Submitted on {format(new Date(req.createdAt), 'd MMM yyyy')}
+                      </p>
+                    </motion.div>
+                  ))}
+              </AnimatePresence>
             </div>
           </div>
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
     </>
   );
 }

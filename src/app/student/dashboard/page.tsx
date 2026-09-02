@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { format } from 'date-fns';
 import { useChavaraStore } from '@/lib/store';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Timeline } from '@/components/ui/Timeline';
@@ -36,7 +37,18 @@ import {
   BarChart,
   Bar
 } from 'recharts';
-import { motion } from 'framer-motion';
+import {
+  motion,
+  AnimatePresence,
+  TiltCard,
+  Stagger,
+  StaggerItem,
+  Reveal,
+  AnimatedNumber,
+  hoverLift,
+  listItem,
+  springs,
+} from '@/lib/motion';
 
 const ATTENDANCE_DATA = [
   { day: 'Mon', hoursPresent: 24, libraryHours: 3 },
@@ -53,13 +65,13 @@ export default function StudentDashboard() {
   const { currentUser, studentLeaves, foodOrders, feePayments, complaints, rooms, externalDeliveries } = store;
   const notices = store.notices || [];
 
-  const myRoom = rooms.find((r) => r.roomNumber === currentUser.roomNumber) || rooms[0];
-  const roommates = myRoom?.students.filter((s) => s.id !== currentUser.id) || [];
-  const pendingLeavesCount = studentLeaves.filter((l) => l.status === 'pending').length;
-  const approvedLeaves = studentLeaves.filter((l) => l.status === 'approved');
+  const myRoom = rooms.find((r: any) => r.roomNumber === currentUser.roomNumber) || rooms[0];
+  const roommates = myRoom?.students.filter((s: any) => s.id !== currentUser.id) || [];
+  const pendingLeavesCount = studentLeaves.filter((l: any) => l.status === 'pending').length;
+  const approvedLeaves = studentLeaves.filter((l: any) => l.status === 'approved');
   const activePass = approvedLeaves[0];
-  const mealsOrderedCount = foodOrders.filter((f) => f.ordered).length;
-  const pendingFeesAmount = feePayments.filter((f) => f.status === 'pending' || f.status === 'overdue').reduce((acc, curr) => acc + curr.amount, 0);
+  const mealsOrderedCount = foodOrders.filter((f: any) => f.ordered).length;
+  const pendingFeesAmount = feePayments.filter((f: any) => f.status === 'pending' || f.status === 'overdue').reduce((acc: any, curr: any) => acc + curr.amount, 0);
   const myActiveDeliveries = externalDeliveries.filter((d: any) => (d.studentId === currentUser.id || currentUser.role !== 'student') && (d.status === 'en-route' || d.status === 'arrived-gate'));
 
   // Filter notices for this student's block or 'All'
@@ -78,16 +90,16 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8">
       {/* Welcome Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-900 via-purple-900 to-zinc-950 p-6 sm:p-8 text-white shadow-xl border border-violet-500/20">
-        <div className="absolute -right-10 -top-10 w-64 h-64 bg-violet-500/20 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
+      <TiltCard max={4} className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-900 via-purple-900 to-zinc-950 p-6 sm:p-8 text-white shadow-xl border border-violet-500/20">
+        <div className="absolute -right-10 -top-10 w-64 h-64 bg-violet-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-1/3 -bottom-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-violet-200 border border-white/10">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>Monsoon Semester 2026 — Active Scholar</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
@@ -99,24 +111,32 @@ export default function StudentDashboard() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <Link
-              href="/student/leave-requests"
-              className="px-5 py-3 rounded-2xl bg-white text-violet-900 font-bold text-sm shadow-lg hover:bg-violet-50 transition-all flex items-center gap-2"
-            >
-              <Calendar className="w-4 h-4 text-violet-700" />
-              <span>View My Movement Logs</span>
-            </Link>
+            <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} transition={springs.snappy}>
+              <Link
+                href="/student/leave-requests"
+                className="px-5 py-3 rounded-2xl bg-white text-violet-900 font-bold text-sm shadow-lg hover:bg-violet-50 transition-colors flex items-center gap-2"
+              >
+                <Calendar className="w-4 h-4 text-violet-700" />
+                <span>View My Movement Logs</span>
+              </Link>
+            </motion.div>
           </div>
         </div>
-      </div>
+      </TiltCard>
 
       {/* Broadcast Notices */}
       {myNotices.length > 0 && (
         <div className="space-y-4">
+          <AnimatePresence initial={false}>
           {myNotices.map((notice: any) => (
-            <div 
+            <motion.div
               key={notice.id}
-              className={`p-4 sm:p-5 rounded-2xl flex items-start gap-4 border-l-4 shadow-sm transition-all ${
+              variants={listItem}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              layout
+              className={`p-4 sm:p-5 rounded-2xl flex items-start gap-4 border-l-4 shadow-sm transition-colors ${
                 notice.priority === 'urgent' ? 'bg-red-50 dark:bg-red-500/10 border-red-500' :
                 notice.priority === 'high' ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-500' :
                 'bg-violet-50 dark:bg-violet-900/10 border-violet-500'
@@ -143,18 +163,19 @@ export default function StudentDashboard() {
                   {notice.message}
                 </p>
                 <div className="mt-2 text-[10px] font-medium opacity-60">
-                  Broadcast by {notice.author} • {new Date(notice.date).toLocaleDateString()}
+                  Broadcast by {notice.author} • {format(new Date(notice.date), 'd MMM yyyy')}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
       )}
 
       {/* Primary KPI Widgets Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Widget 1: Today's Status */}
-        <div className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
+        <StaggerItem className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Today&apos;s Status</span>
             <ShieldCheck className="w-5 h-5 text-emerald-500" />
@@ -166,10 +187,10 @@ export default function StudentDashboard() {
             <StatusBadge status={currentUser.attendanceToday || 'present'} size="sm" />
           </div>
           <p className="text-xs text-zinc-500">Curfew check-in at 08:30 PM</p>
-        </div>
+        </StaggerItem>
 
         {/* Widget 2: Room Allocation */}
-        <div className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
+        <StaggerItem className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Room Allocation</span>
             <Building2 className="w-5 h-5 text-violet-500" />
@@ -183,17 +204,17 @@ export default function StudentDashboard() {
             </span>
           </div>
           <p className="text-xs text-zinc-500 truncate">Roommate: {roommates[0]?.name || 'Diya Patel'}</p>
-        </div>
+        </StaggerItem>
 
         {/* Widget 4: Fee Dues */}
-        <div className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
+        <StaggerItem className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Outstanding Dues</span>
             <CreditCard className="w-5 h-5 text-blue-500" />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">
-              ${pendingFeesAmount}
+              <AnimatedNumber value={pendingFeesAmount} format={(v) => `$${Math.round(v)}`} />
             </span>
             {pendingFeesAmount === 0 ? (
               <StatusBadge status="paid" size="sm" />
@@ -202,8 +223,8 @@ export default function StudentDashboard() {
             )}
           </div>
           <p className="text-xs text-zinc-500">Next due date: July 31st, 2026</p>
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
 
       {/* Quick Actions Grid */}
       <div className="space-y-4">
@@ -215,14 +236,15 @@ export default function StudentDashboard() {
           <span className="text-xs text-zinc-400">Instant access to student modules</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
+              <StaggerItem key={action.title} className="h-full">
+              <motion.div {...hoverLift} className="h-full">
               <Link
-                key={action.title}
                 href={action.href}
-                className="group relative overflow-hidden p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-violet-500/50 dark:hover:border-violet-500/50 transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-between"
+                className="group relative overflow-hidden p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-violet-500/50 dark:hover:border-violet-500/50 transition-colors duration-300 shadow-sm hover:shadow-md flex items-center justify-between h-full"
               >
                 <div className="flex items-center gap-3.5">
                   <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center text-white shadow-md shadow-violet-500/10 group-hover:scale-110 transition-transform duration-300`}>
@@ -237,15 +259,17 @@ export default function StudentDashboard() {
                 </div>
                 <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-violet-600 dark:group-hover:text-violet-400 group-hover:translate-x-1 transition-all" />
               </Link>
+              </motion.div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </Stagger>
       </div>
 
       {/* Middle Section: Attendance Chart & Active Leave / Pass Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Attendance Area Chart (2 Cols) */}
-        <div className="lg:col-span-2 glass-card p-6 rounded-3xl space-y-4">
+        <Reveal className="lg:col-span-2 glass-card p-6 rounded-3xl space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
             <div>
               <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
@@ -264,32 +288,32 @@ export default function StudentDashboard() {
               <AreaChart data={ATTENDANCE_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6D28D9" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#6D28D9" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#8d7cc9" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#8d7cc9" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="colorLib" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#A855F7" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#A855F7" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#1c9a89" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#1c9a89" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.15)" vertical={false} />
-                <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} unit="h" />
+                <XAxis dataKey="day" stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} unit="h" />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'rgba(9, 9, 11, 0.9)',
+                    backgroundColor: 'rgba(28, 27, 34, 0.95)',
                     borderRadius: '12px',
                     border: '1px solid rgba(255,255,255,0.1)',
                     color: '#fff',
                     fontSize: '12px',
                   }}
                 />
-                <Area type="monotone" name="Campus Hours" dataKey="hoursPresent" stroke="#6D28D9" strokeWidth={3} fillOpacity={1} fill="url(#colorPresent)" />
-                <Area type="monotone" name="Library Study" dataKey="libraryHours" stroke="#A855F7" strokeWidth={2} fillOpacity={1} fill="url(#colorLib)" />
+                <Area type="monotone" name="Campus Hours" dataKey="hoursPresent" stroke="#8d7cc9" strokeWidth={3} fillOpacity={1} fill="url(#colorPresent)" />
+                <Area type="monotone" name="Library Study" dataKey="libraryHours" stroke="#1c9a89" strokeWidth={2} fillOpacity={1} fill="url(#colorLib)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </Reveal>
 
         {/* Active Delivery & Roommate Widget (1 Col) */}
         <div className="space-y-6">
@@ -302,7 +326,7 @@ export default function StudentDashboard() {
                 <ShoppingBag className="w-3 h-3 text-orange-400" /> Gate Delivery Feed
               </span>
               {myActiveDeliveries.length > 0 ? (
-                <span className="text-xs font-bold bg-amber-500 text-white px-2.5 py-0.5 rounded-full animate-pulse">
+                <span className="text-xs font-bold bg-amber-500 text-white px-2.5 py-0.5 rounded-full">
                   Arriving Today
                 </span>
               ) : (
@@ -310,8 +334,16 @@ export default function StudentDashboard() {
               )}
             </div>
 
+            <AnimatePresence initial={false} mode="wait">
             {myActiveDeliveries.length > 0 ? (
-              <div className="space-y-2">
+              <motion.div
+                key={myActiveDeliveries[0].id}
+                variants={listItem}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="space-y-2"
+              >
                 <h4 className="font-extrabold text-base text-white">{myActiveDeliveries[0].platform} — {myActiveDeliveries[0].restaurantOrStore}</h4>
                 <p className="text-xs text-zinc-300 truncate">{myActiveDeliveries[0].itemsSummary}</p>
                 <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-xs mt-2">
@@ -326,9 +358,16 @@ export default function StudentDashboard() {
                     View Log →
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             ) : (
-              <div className="space-y-2 py-2">
+              <motion.div
+                key="gate-clear"
+                variants={listItem}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="space-y-2 py-2"
+              >
                 <h4 className="font-bold text-base text-white">No External Deliveries Logged</h4>
                 <p className="text-xs text-zinc-400 leading-relaxed">
                   Ordering from Swiggy, Zomato, or Instamart? Register your order for seamless security gate clearance.
@@ -341,12 +380,13 @@ export default function StudentDashboard() {
                     <Plus className="w-3.5 h-3.5 text-orange-400" /> Log Swiggy / Zomato Order
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
 
           {/* Roommates Card */}
-          <div className="glass-card p-5 rounded-3xl space-y-3">
+          <Reveal delay={0.1} className="glass-card p-5 rounded-3xl space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-sm text-zinc-900 dark:text-white flex items-center gap-2">
                 <Users className="w-4 h-4 text-violet-600" />
@@ -356,7 +396,7 @@ export default function StudentDashboard() {
             </div>
 
             <div className="space-y-2.5 pt-1">
-              {myRoom.students.map((student) => (
+              {myRoom.students.map((student: any) => (
                 <div key={student.id} className="flex items-center justify-between p-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800">
                   <div className="flex items-center gap-2.5">
                     <img src={student.avatar} alt={student.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-violet-500/20" />
@@ -373,12 +413,12 @@ export default function StudentDashboard() {
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
 
       {/* Bottom Section: Recent Activity & Leave Timeline */}
-      <div className="glass-card p-6 rounded-3xl space-y-4">
+      <Reveal className="glass-card p-6 rounded-3xl space-y-4">
         <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
             <Calendar className="w-5 h-5 text-violet-600" />
@@ -393,8 +433,17 @@ export default function StudentDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          {studentLeaves.slice(0, 2).map((leave) => (
-            <div key={leave.id} className="p-4 rounded-2xl bg-zinc-50/80 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60 space-y-3">
+          <AnimatePresence initial={false}>
+          {studentLeaves.slice(0, 2).map((leave: any) => (
+            <motion.div
+              key={leave.id}
+              variants={listItem}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              layout
+              className="p-4 rounded-2xl bg-zinc-50/80 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60 space-y-3"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/60 px-2 py-0.5 rounded">
                   {leave.type} Log
@@ -426,10 +475,11 @@ export default function StudentDashboard() {
                   View Log →
                 </Link>
               </div>
-            </div>
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

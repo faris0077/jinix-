@@ -8,6 +8,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { LeaveRequest } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Home, Calendar, Utensils, Send, MapPin, Sparkles, CheckCircle2 } from 'lucide-react';
+import { motion, springs, Stagger, StaggerItem, Reveal } from '@/lib/motion';
 import { toast } from 'sonner';
 
 export default function HomeLeavePage() {
@@ -119,7 +120,7 @@ export default function HomeLeavePage() {
   ];
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-300">
+    <div className="space-y-10">
       {/* Page Header */}
       <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
@@ -132,9 +133,9 @@ export default function HomeLeavePage() {
       </div>
 
       {/* Grid: Form & Info */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <Stagger className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Form (2 Cols) */}
-        <div className="lg:col-span-2 glass-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <StaggerItem className="lg:col-span-2 glass-card p-6 sm:p-8 rounded-3xl space-y-6">
           <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-4">
             <h2 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
               <Calendar className="w-5 h-5 text-violet-600" />
@@ -223,8 +224,10 @@ export default function HomeLeavePage() {
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {(['breakfast', 'lunch', 'tea', 'dinner'] as const).map((meal) => (
-                  <label
+                  <motion.label
                     key={meal}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
                     className={cn(
                       'flex items-center gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer select-none',
                       foodReq[meal]
@@ -239,23 +242,26 @@ export default function HomeLeavePage() {
                       className="rounded border-zinc-300 text-violet-600 focus:ring-violet-500 w-4 h-4"
                     />
                     <span className="capitalize text-xs">{meal}</span>
-                  </label>
+                  </motion.label>
                 ))}
               </div>
             </div>
 
-            <button
+            <motion.button
               type="submit"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
               className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-all flex items-center justify-center gap-2"
             >
               <Send className="w-4 h-4" />
               <span>Submit Home Leave Application</span>
-            </button>
+            </motion.button>
           </form>
-        </div>
+        </StaggerItem>
 
         {/* Side Info Widget */}
-        <div className="space-y-6">
+        <StaggerItem className="space-y-6">
           <div className="glass-card p-6 rounded-3xl space-y-4 bg-gradient-to-br from-violet-950/40 to-zinc-900/40 border-violet-500/20">
             <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-400" />
@@ -267,18 +273,18 @@ export default function HomeLeavePage() {
               <li>Unchecked meals will be deducted from your quarterly mess bill automatically.</li>
             </ul>
           </div>
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
 
       {/* History Table */}
-      <div className="space-y-4 pt-4">
+      <Reveal className="space-y-4 pt-4">
         <DataTable
           columns={columns}
           data={homeLeaves}
           searchPlaceholder="Search destination or date..."
           title="Home Leave History"
         />
-      </div>
+      </Reveal>
     </div>
   );
 }

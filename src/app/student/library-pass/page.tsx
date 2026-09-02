@@ -15,6 +15,7 @@ import {
   MapPin,
   AlertCircle
 } from 'lucide-react';
+import { motion, AnimatePresence, springs, listItem, Stagger, StaggerItem, Reveal, EASE_OUT } from '@/lib/motion';
 import { toast } from 'sonner';
 
 export default function StudentLibraryPassPage() {
@@ -50,7 +51,7 @@ export default function StudentLibraryPassPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto animate-in fade-in duration-300">
+    <div className="space-y-8 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white flex items-center gap-3">
@@ -70,9 +71,9 @@ export default function StudentLibraryPassPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <Stagger className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <StaggerItem className="lg:col-span-2 space-y-6">
           <div className="glass-card p-6 sm:p-8 rounded-3xl space-y-6 border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg">
             <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-4">
               <h3 className="font-extrabold text-lg text-zinc-900 dark:text-white flex items-center gap-2">
@@ -129,18 +130,21 @@ export default function StudentLibraryPassPage() {
                 <p className="text-[11px] text-zinc-400">Library study sessions allow curfew extension up to 11:00 PM.</p>
               </div>
 
-              <button
+              <motion.button
                 type="submit"
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={springs.snappy}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white font-bold text-sm shadow-lg shadow-purple-600/25 transition-all flex items-center justify-center gap-2 mt-4"
               >
                 <BookOpen className="w-4 h-4" /> Log Study Hours in Warden Register
-              </button>
+              </motion.button>
             </form>
           </div>
-        </div>
+        </StaggerItem>
 
         {/* Right Column: Active Status */}
-        <div className="space-y-6">
+        <StaggerItem className="space-y-6">
           <div className="glass-card p-6 rounded-3xl space-y-4 border border-purple-500/30 relative overflow-hidden bg-gradient-to-br from-purple-900/10 to-transparent">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
@@ -150,34 +154,53 @@ export default function StudentLibraryPassPage() {
             </div>
 
             <div className="space-y-3 pt-2">
-              {isCurrentlyInLibrary || (activeLibraryLog && activeLibraryLog.status === 'approved') ? (
-                <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-200 space-y-2">
-                    <div className="flex items-center gap-2 font-bold text-sm">
-                      <Clock className="w-4 h-4 text-purple-500 animate-pulse" />
-                      <span>Registered at Central Library</span>
-                    </div>
-                    <p className="text-xs leading-relaxed">
-                      You are currently logged at <strong className="font-bold">{activeLibraryLog?.destination || section}</strong>. Curfew extension active until {activeLibraryLog?.endTime || '10:30 PM'}.
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => logStudentReturn(currentUser.id)}
-                    className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2"
+              <AnimatePresence mode="wait" initial={false}>
+                {isCurrentlyInLibrary || (activeLibraryLog && activeLibraryLog.status === 'approved') ? (
+                  <motion.div
+                    key="library-active"
+                    initial={{ opacity: 0, scale: 0.97, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, transition: { duration: 0.25, ease: 'easeIn' } }}
+                    transition={{ duration: 0.4, ease: EASE_OUT }}
+                    className="space-y-4"
                   >
-                    <CheckCircle2 className="w-5 h-5" /> Mark Returned to Room {currentUser.roomNumber || '304A'}
-                  </button>
-                </div>
-              ) : (
-                <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2">
-                  <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
-                  <p className="font-bold text-sm text-emerald-900 dark:text-emerald-200">In Residence Wing</p>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                    No active library sessions logged for tonight.
-                  </p>
-                </div>
-              )}
+                    <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-200 space-y-2">
+                      <div className="flex items-center gap-2 font-bold text-sm">
+                        <Clock className="w-4 h-4 text-purple-500" />
+                        <span>Registered at Central Library</span>
+                      </div>
+                      <p className="text-xs leading-relaxed">
+                        You are currently logged at <strong className="font-bold">{activeLibraryLog?.destination || section}</strong>. Curfew extension active until {activeLibraryLog?.endTime || '10:30 PM'}.
+                      </p>
+                    </div>
+
+                    <motion.button
+                      onClick={() => logStudentReturn(currentUser.id)}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.97 }}
+                      transition={springs.snappy}
+                      className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle2 className="w-5 h-5" /> Mark Returned to Room {currentUser.roomNumber || '304A'}
+                    </motion.button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="library-idle"
+                    initial={{ opacity: 0, scale: 0.97, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, transition: { duration: 0.25, ease: 'easeIn' } }}
+                    transition={{ duration: 0.4, ease: EASE_OUT }}
+                    className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2"
+                  >
+                    <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
+                    <p className="font-bold text-sm text-emerald-900 dark:text-emerald-200">In Residence Wing</p>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                      No active library sessions logged for tonight.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -187,22 +210,31 @@ export default function StudentLibraryPassPage() {
             </h4>
             <p>By registering your study session, the Warden can immediately see your location during evening roll calls without disturbing your research.</p>
           </div>
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
 
       {/* History */}
-      <div className="glass-card p-6 rounded-3xl space-y-4 border border-zinc-200/80 dark:border-zinc-800/80">
+      <Reveal className="glass-card p-6 rounded-3xl space-y-4 border border-zinc-200/80 dark:border-zinc-800/80">
         <h3 className="font-extrabold text-base text-zinc-900 dark:text-white flex items-center gap-2">
           <History className="w-5 h-5 text-purple-600" />
           <span>Past Library Study Log</span>
         </h3>
 
         <div className="space-y-2 pt-1">
-          {libraryLogs.length === 0 ? (
+          {libraryLogs.length === 0 && (
             <p className="text-xs text-zinc-500 italic py-4 text-center">No library study logs recorded yet.</p>
-          ) : (
-            libraryLogs.map((item) => (
-              <div key={item.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          )}
+          <AnimatePresence initial={false}>
+            {libraryLogs.map((item) => (
+              <motion.div
+                key={item.id}
+                variants={listItem}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                layout
+                className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-sm text-zinc-900 dark:text-white">{item.destination || 'Central Library'}</span>
@@ -221,11 +253,11 @@ export default function StudentLibraryPassPage() {
                     <p className="text-amber-500 font-semibold italic">Awaiting Return Check-in</p>
                   )}
                 </div>
-              </div>
-            ))
-          )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

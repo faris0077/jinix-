@@ -5,6 +5,35 @@ import { useChavaraStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Settings, ShieldCheck, Bell, Lock, Smartphone, CheckCircle2, Moon } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, Stagger, StaggerItem, springs } from '@/lib/motion';
+
+/** Quiet-luxury toggle: the knob glides between sides via a layout animation. */
+function ToggleSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        'relative w-11 h-6 shrink-0 rounded-full p-0.5 flex items-center cursor-pointer transition-colors',
+        checked ? 'bg-violet-600 justify-end' : 'bg-zinc-300 dark:bg-zinc-700 justify-start'
+      )}
+    >
+      <motion.span
+        layout
+        transition={springs.snappy}
+        className="block w-5 h-5 rounded-full bg-white shadow-sm"
+      />
+    </button>
+  );
+}
 
 export default function StudentSettingsPage() {
   const { currentUser } = useChavaraStore();
@@ -21,7 +50,7 @@ export default function StudentSettingsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto">
       {/* Page Header */}
       <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
@@ -33,9 +62,9 @@ export default function StudentSettingsPage() {
         </p>
       </div>
 
-      <div className="space-y-6">
+      <Stagger className="space-y-6">
         {/* Security & Gate Pass Settings */}
-        <div className="glass-card p-6 rounded-3xl space-y-6">
+        <StaggerItem className="glass-card p-6 rounded-3xl space-y-6">
           <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
             <ShieldCheck className="w-5 h-5 text-emerald-500" />
             <h2 className="font-bold text-base text-zinc-900 dark:text-white">Campus Security & Biometrics</h2>
@@ -51,12 +80,7 @@ export default function StudentSettingsPage() {
                   Allow campus security turnstiles to verify your movement logs using digital ID verification.
                 </p>
               </div>
-              <input
-                type="checkbox"
-                checked={biometricAuth}
-                onChange={(e) => setBiometricAuth(e.target.checked)}
-                className="rounded-full border-zinc-300 text-violet-600 focus:ring-violet-500 w-5 h-5 cursor-pointer"
-              />
+              <ToggleSwitch checked={biometricAuth} onChange={setBiometricAuth} />
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800">
@@ -68,18 +92,13 @@ export default function StudentSettingsPage() {
                   Automatically send SMS check-in/check-out confirmation to primary guardian ({currentUser.parentPhone || '+91 98765 43211'}).
                 </p>
               </div>
-              <input
-                type="checkbox"
-                checked={parentSMSNotify}
-                onChange={(e) => setParentSMSNotify(e.target.checked)}
-                className="rounded-full border-zinc-300 text-violet-600 focus:ring-violet-500 w-5 h-5 cursor-pointer"
-              />
+              <ToggleSwitch checked={parentSMSNotify} onChange={setParentSMSNotify} />
             </div>
           </div>
-        </div>
+        </StaggerItem>
 
         {/* Curfew & Kitchen Alerts */}
-        <div className="glass-card p-6 rounded-3xl space-y-6">
+        <StaggerItem className="glass-card p-6 rounded-3xl space-y-6">
           <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
             <Bell className="w-5 h-5 text-violet-600" />
             <h2 className="font-bold text-base text-zinc-900 dark:text-white">Curfew & Meal Cutoff Reminders</h2>
@@ -95,12 +114,7 @@ export default function StudentSettingsPage() {
                   Receive high-priority push notifications 30 minutes before main gate curfew closing.
                 </p>
               </div>
-              <input
-                type="checkbox"
-                checked={curfewAlerts}
-                onChange={(e) => setCurfewAlerts(e.target.checked)}
-                className="rounded-full border-zinc-300 text-violet-600 focus:ring-violet-500 w-5 h-5 cursor-pointer"
-              />
+              <ToggleSwitch checked={curfewAlerts} onChange={setCurfewAlerts} />
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800">
@@ -112,26 +126,24 @@ export default function StudentSettingsPage() {
                   Notify me via SMS 1 hour prior to breakfast, lunch, and dinner cutoff timers.
                 </p>
               </div>
-              <input
-                type="checkbox"
-                checked={kitchenCutoffSMS}
-                onChange={(e) => setKitchenCutoffSMS(e.target.checked)}
-                className="rounded-full border-zinc-300 text-violet-600 focus:ring-violet-500 w-5 h-5 cursor-pointer"
-              />
+              <ToggleSwitch checked={kitchenCutoffSMS} onChange={setKitchenCutoffSMS} />
             </div>
           </div>
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
 
       {/* Save Button */}
       <div className="flex justify-end pt-4">
-        <button
+        <motion.button
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.97 }}
+          transition={springs.snappy}
           onClick={handleSave}
-          className="px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-all flex items-center gap-2"
+          className="px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-colors flex items-center gap-2"
         >
           <CheckCircle2 className="w-4 h-4" />
           <span>Save Preferences</span>
-        </button>
+        </motion.button>
       </div>
     </div>
   );

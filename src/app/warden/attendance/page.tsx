@@ -8,6 +8,17 @@ import { ColumnDef } from '@tanstack/react-table';
 import { User } from '@/lib/mock-data';
 import { Calendar, CheckCircle2, Clock, MapPin, ShieldCheck, Download, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  motion,
+  AnimatePresence,
+  springs,
+  EASE_OUT,
+  fadeUp,
+  hoverLift,
+  Stagger,
+  AnimatedNumber,
+  Reveal,
+} from '@/lib/motion';
 
 export default function WardenAttendancePage() {
   const { users } = useChavaraStore();
@@ -58,7 +69,23 @@ export default function WardenAttendancePage() {
     {
       accessorKey: 'attendanceToday',
       header: 'Biometric Gate Status',
-      cell: ({ row }) => <StatusBadge status={row.original.attendanceToday || 'present'} />,
+      cell: ({ row }) => {
+        const status = row.original.attendanceToday || 'present';
+        return (
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={status}
+              initial={{ opacity: 0, y: 6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25, ease: EASE_OUT }}
+              className="inline-block"
+            >
+              <StatusBadge status={status} />
+            </motion.span>
+          </AnimatePresence>
+        );
+      },
     },
     {
       id: 'lastSeen',
@@ -76,21 +103,34 @@ export default function WardenAttendancePage() {
       header: 'Curfew Compliance',
       cell: ({ row }) => {
         const status = row.original.attendanceToday || 'present';
-        return status === 'outpass' ? (
-          <span className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200">
-            Due by 08:30 PM
-          </span>
-        ) : (
-          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
-            Compliant
-          </span>
+        return (
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={status === 'outpass' ? 'due' : 'compliant'}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25, ease: EASE_OUT }}
+              className="inline-block"
+            >
+              {status === 'outpass' ? (
+                <span className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200">
+                  Due by 08:30 PM
+                </span>
+              ) : (
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
+                  Compliant
+                </span>
+              )}
+            </motion.span>
+          </AnimatePresence>
         );
       },
     },
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
@@ -109,60 +149,73 @@ export default function WardenAttendancePage() {
             onChange={(e) => setSelectedDate(e.target.value)}
             className="px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 shadow-sm"
           />
-          <button
+          <motion.button
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            transition={springs.snappy}
             onClick={handleExportAttendance}
-            className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
+            className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5"
           >
             <Download className="w-3.5 h-3.5" /> Export Audit Report
-          </button>
+          </motion.button>
         </div>
       </div>
 
       {/* Tally Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div
+      <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div
+          variants={fadeUp}
+          {...hoverLift}
           onClick={() => setStatusFilter('present')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${statusFilter === 'present' ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 shadow-md ring-2 ring-emerald-500/20' : 'glass-card hover:border-emerald-500/40'}`}
+          className={`p-4 rounded-2xl border transition-colors cursor-pointer ${statusFilter === 'present' ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 shadow-md ring-2 ring-emerald-500/20' : 'glass-card hover:border-emerald-500/40'}`}
         >
           <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 block">Inside Campus</span>
-          <span className="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1 block">{presentCount}</span>
+          <span className="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1 block"><AnimatedNumber value={presentCount} format={(v) => `${Math.round(v)}`} /></span>
           <span className="text-[10px] text-zinc-400">Checked in before curfew</span>
-        </div>
+        </motion.div>
 
-        <div
+        <motion.div
+          variants={fadeUp}
+          {...hoverLift}
           onClick={() => setStatusFilter('outpass')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${statusFilter === 'outpass' ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-500 shadow-md ring-2 ring-amber-500/20' : 'glass-card hover:border-amber-500/40'}`}
+          className={`p-4 rounded-2xl border transition-colors cursor-pointer ${statusFilter === 'outpass' ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-500 shadow-md ring-2 ring-amber-500/20' : 'glass-card hover:border-amber-500/40'}`}
         >
           <span className="text-xs font-bold uppercase tracking-wider text-amber-600 block">Active Outpass</span>
-          <span className="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1 block">{outpassCount}</span>
+          <span className="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1 block"><AnimatedNumber value={outpassCount} format={(v) => `${Math.round(v)}`} /></span>
           <span className="text-[10px] text-zinc-400">Currently in city / mall</span>
-        </div>
+        </motion.div>
 
-        <div
+        <motion.div
+          variants={fadeUp}
+          {...hoverLift}
           onClick={() => setStatusFilter('library')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${statusFilter === 'library' ? 'bg-purple-50 dark:bg-purple-950/50 border-purple-500 shadow-md ring-2 ring-purple-500/20' : 'glass-card hover:border-purple-500/40'}`}
+          className={`p-4 rounded-2xl border transition-colors cursor-pointer ${statusFilter === 'library' ? 'bg-purple-50 dark:bg-purple-950/50 border-purple-500 shadow-md ring-2 ring-purple-500/20' : 'glass-card hover:border-purple-500/40'}`}
         >
           <span className="text-xs font-bold uppercase tracking-wider text-purple-600 block">Digital Library Pass</span>
-          <span className="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1 block">{libraryCount}</span>
+          <span className="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1 block"><AnimatedNumber value={libraryCount} format={(v) => `${Math.round(v)}`} /></span>
           <span className="text-[10px] text-zinc-400">Central Tech Library</span>
-        </div>
+        </motion.div>
 
-        <div
+        <motion.div
+          variants={fadeUp}
+          {...hoverLift}
           onClick={() => setStatusFilter('on-leave')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${statusFilter === 'on-leave' ? 'bg-rose-50 dark:bg-rose-950/50 border-rose-500 shadow-md ring-2 ring-rose-500/20' : 'glass-card hover:border-rose-500/40'}`}
+          className={`p-4 rounded-2xl border transition-colors cursor-pointer ${statusFilter === 'on-leave' ? 'bg-rose-50 dark:bg-rose-950/50 border-rose-500 shadow-md ring-2 ring-rose-500/20' : 'glass-card hover:border-rose-500/40'}`}
         >
           <span className="text-xs font-bold uppercase tracking-wider text-rose-600 block">Home / Vacation Leave</span>
-          <span className="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1 block">{leaveCount}</span>
+          <span className="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1 block"><AnimatedNumber value={leaveCount} format={(v) => `${Math.round(v)}`} /></span>
           <span className="text-[10px] text-zinc-400">Overnight out of station</span>
-        </div>
-      </div>
+        </motion.div>
+      </Stagger>
 
-      <DataTable
-        columns={columns}
-        data={filteredData}
-        searchPlaceholder="Search student name or room number..."
-        title={`Attendance Logs (${statusFilter.toUpperCase()})`}
-      />
+      <Reveal>
+        <DataTable
+          columns={columns}
+          data={filteredData}
+          searchPlaceholder="Search student name or room number..."
+          title={`Attendance Logs (${statusFilter.toUpperCase()})`}
+        />
+      </Reveal>
     </div>
   );
 }

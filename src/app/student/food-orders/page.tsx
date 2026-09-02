@@ -21,7 +21,7 @@ import {
   Building2,
   ShieldAlert
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, listItem, springs, Stagger, StaggerItem } from '@/lib/motion';
 import { toast } from 'sonner';
 
 export default function FoodOrdersPage() {
@@ -62,12 +62,12 @@ export default function FoodOrdersPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto animate-in fade-in duration-300">
+    <div className="space-y-8 max-w-6xl mx-auto">
       {/* Page Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
-            <Utensils className="w-7 h-7 text-violet-600 animate-bounce" />
+            <Utensils className="w-7 h-7 text-violet-600" />
             <span>Dining & External Delivery Register</span>
           </h1>
           <p className="text-sm text-zinc-500 mt-1">
@@ -78,10 +78,10 @@ export default function FoodOrdersPage() {
       </div>
 
         {/* External Delivery Gate Register Tab */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Stagger className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Log Form */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="glass-card p-6 sm:p-8 rounded-3xl space-y-6 border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg">
+            <StaggerItem className="glass-card p-6 sm:p-8 rounded-3xl space-y-6 border border-zinc-200/80 dark:border-zinc-800/80 shadow-lg">
               <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-4">
                 <div>
                   <h3 className="font-extrabold text-lg text-zinc-900 dark:text-white flex items-center gap-2">
@@ -188,38 +188,47 @@ export default function FoodOrdersPage() {
 
 
 
-                <button
+                <motion.button
                   type="submit"
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-extrabold text-sm shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2 mt-4"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={springs.snappy}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-extrabold text-sm shadow-lg shadow-orange-500/25 transition-colors flex items-center justify-center gap-2 mt-4"
                 >
                   <Truck className="w-4 h-4" /> Register Delivery in Warden & Gate Console
-                </button>
+                </motion.button>
               </form>
-            </div>
+            </StaggerItem>
 
             {/* Active Deliveries List */}
-            <div className="glass-card p-6 sm:p-8 rounded-3xl space-y-6 border border-zinc-200/80 dark:border-zinc-800/80">
+            <StaggerItem className="glass-card p-6 sm:p-8 rounded-3xl space-y-6 border border-zinc-200/80 dark:border-zinc-800/80">
               <h3 className="font-extrabold text-base text-zinc-900 dark:text-white flex items-center gap-2">
                 <PackageCheck className="w-5 h-5 text-orange-500" />
                 <span>Active & Incoming Deliveries ({activeDeliveries.length})</span>
               </h3>
 
               <div className="space-y-3 pt-1">
-                {activeDeliveries.length === 0 ? (
+                {activeDeliveries.length === 0 && (
                   <p className="text-xs text-zinc-500 italic py-6 text-center bg-zinc-50 dark:bg-zinc-900/40 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
                     No active external deliveries en route right now. Register your order above!
                   </p>
-                ) : (
-                  activeDeliveries.map((deliv) => (
-                    <div
-                      key={deliv.id}
-                      className={cn(
-                        'p-5 rounded-2xl border transition-all space-y-3',
-                        deliv.status === 'arrived-gate'
-                          ? 'bg-amber-500/10 border-amber-500/40 shadow-md animate-pulse'
-                          : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'
-                      )}
-                    >
+                )}
+                <AnimatePresence initial={false}>
+                    {activeDeliveries.map((deliv) => (
+                      <motion.div
+                        key={deliv.id}
+                        variants={listItem}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        layout
+                        className={cn(
+                          'p-5 rounded-2xl border transition-colors space-y-3',
+                          deliv.status === 'arrived-gate'
+                            ? 'bg-amber-500/10 border-amber-500/40 shadow-md'
+                            : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'
+                        )}
+                      >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-extrabold text-sm text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-lg">
@@ -268,22 +277,25 @@ export default function FoodOrdersPage() {
                         )}
                       </div>
 
-                      <button
-                        onClick={() => markDeliveryCollected(deliv.id)}
-                        className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 mt-2"
-                      >
-                        <CheckCircle2 className="w-4 h-4" /> Mark Collected at Security Gate
-                      </button>
-                    </div>
-                  ))
-                )}
+                        <motion.button
+                          onClick={() => markDeliveryCollected(deliv.id)}
+                          whileHover={{ y: -2 }}
+                          whileTap={{ scale: 0.97 }}
+                          transition={springs.snappy}
+                          className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-colors flex items-center justify-center gap-2 mt-2"
+                        >
+                          <CheckCircle2 className="w-4 h-4" /> Mark Collected at Security Gate
+                        </motion.button>
+                      </motion.div>
+                    ))}
+                </AnimatePresence>
               </div>
-            </div>
+            </StaggerItem>
           </div>
 
           {/* Right Column: Gate Regulations & Past Log */}
           <div className="space-y-6">
-            <div className="glass-card p-6 rounded-3xl space-y-4 border border-orange-500/30 bg-gradient-to-br from-orange-950/20 via-zinc-900/10 to-transparent">
+            <StaggerItem className="glass-card p-6 rounded-3xl space-y-4 border border-orange-500/30 bg-gradient-to-br from-orange-950/20 via-zinc-900/10 to-transparent">
               <h4 className="font-extrabold text-sm text-zinc-900 dark:text-white flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-orange-500" /> Gate Delivery Rules
               </h4>
@@ -293,21 +305,30 @@ export default function FoodOrdersPage() {
                 <li>Deliveries arriving post-curfew (08:30 PM) require Warden sign-off to be released from the guard cabin.</li>
                 <li>Please collect and dispose of all plastic packaging in the designated recycling bins.</li>
               </ul>
-            </div>
+            </StaggerItem>
 
             {/* Past Delivery History */}
-            <div className="glass-card p-6 rounded-3xl space-y-4 border border-zinc-200/80 dark:border-zinc-800/80">
+            <StaggerItem className="glass-card p-6 rounded-3xl space-y-4 border border-zinc-200/80 dark:border-zinc-800/80">
               <h3 className="font-extrabold text-sm text-zinc-900 dark:text-white flex items-center gap-2">
                 <History className="w-4 h-4 text-orange-500" />
                 <span>Past Collected Deliveries ({pastDeliveries.length})</span>
               </h3>
 
               <div className="space-y-2 pt-1 max-h-[350px] overflow-y-auto pr-1">
-                {pastDeliveries.length === 0 ? (
+                {pastDeliveries.length === 0 && (
                   <p className="text-xs text-zinc-500 italic text-center py-4">No past food deliveries logged.</p>
-                ) : (
-                  pastDeliveries.map((deliv) => (
-                    <div key={deliv.id} className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1.5 text-xs">
+                )}
+                <AnimatePresence initial={false}>
+                    {pastDeliveries.map((deliv) => (
+                      <motion.div
+                        key={deliv.id}
+                        variants={listItem}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        layout
+                        className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1.5 text-xs"
+                      >
                       <div className="flex items-center justify-between font-bold text-zinc-900 dark:text-white">
                         <span>{deliv.platform} - {deliv.restaurantOrStore}</span>
                         <span className="text-emerald-600 font-semibold text-[10px] bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded shrink-0">
@@ -325,13 +346,13 @@ export default function FoodOrdersPage() {
                       <p className="text-[10px] text-zinc-400 font-mono">
                         {deliv.actualArrivalTime ? `Arrived at Gate: ${deliv.actualArrivalTime}` : `Expected: ${deliv.expectedTime}`}
                       </p>
-                    </div>
-                  ))
-                )}
+                      </motion.div>
+                    ))}
+                </AnimatePresence>
               </div>
-            </div>
+            </StaggerItem>
           </div>
-        </div>
+        </Stagger>
     </div>
   );
 }

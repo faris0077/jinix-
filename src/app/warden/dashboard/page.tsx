@@ -33,7 +33,18 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { motion } from 'framer-motion';
+import {
+  motion,
+  AnimatePresence,
+  springs,
+  fadeIn,
+  listItem,
+  Stagger,
+  StaggerItem,
+  Reveal,
+  AnimatedNumber,
+  TiltCard,
+} from '@/lib/motion';
 import { toast } from 'sonner';
 
 const MOVEMENT_DATA = [
@@ -46,10 +57,10 @@ const MOVEMENT_DATA = [
 ];
 
 const COURSE_PIE_DATA = [
-  { name: 'B.Tech CSE & AI', value: 180, color: '#6D28D9' },
-  { name: 'MBA Executive', value: 110, color: '#A855F7' },
-  { name: 'M.Sc Biotech', value: 90, color: '#C084FC' },
-  { name: 'B.Arch & Design', value: 70, color: '#E879F9' },
+  { name: 'B.Tech CSE & AI', value: 180, color: '#8d7cc9' },
+  { name: 'MBA Executive', value: 110, color: '#1c9a89' },
+  { name: 'M.Sc Biotech', value: 90, color: '#b3812c' },
+  { name: 'B.Arch & Design', value: 70, color: '#4f80b8' },
 ];
 
 export default function WardenDashboard() {
@@ -78,10 +89,10 @@ export default function WardenDashboard() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-950 via-purple-900 to-zinc-950 p-6 sm:p-8 text-white shadow-xl border border-violet-500/30">
-        <div className="absolute -right-10 -top-10 w-80 h-80 bg-violet-600/20 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
+      <TiltCard max={4} className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-950 via-purple-900 to-zinc-950 p-6 sm:p-8 text-white shadow-xl border border-violet-500/30">
+        <div className="absolute -right-10 -top-10 w-80 h-80 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -107,77 +118,77 @@ export default function WardenDashboard() {
             </Link>
           </div>
         </div>
-      </div>
+      </TiltCard>
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
+      <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <StaggerItem className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Bed Occupancy</span>
             <Building2 className="w-5 h-5 text-violet-500" />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">
-              {occupiedBeds} / {totalBeds}
+              <AnimatedNumber value={occupiedBeds} format={(v) => `${Math.round(v)}`} /> / <AnimatedNumber value={totalBeds} format={(v) => `${Math.round(v)}`} />
             </span>
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
               98.8% Full
             </span>
           </div>
           <p className="text-xs text-zinc-500">Total Residents: {totalStudents} Scholars</p>
-        </div>
+        </StaggerItem>
 
-        <div className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group border-amber-500/30">
+        <StaggerItem className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group border-amber-500/30">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Pending Approvals</span>
-            <Clock className="w-5 h-5 text-amber-500 animate-pulse" />
+            <Clock className="w-5 h-5 text-amber-500" />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">
-              {pendingLeaves.length}
+              <AnimatedNumber value={pendingLeaves.length} format={(v) => `${Math.round(v)}`} />
             </span>
             <StatusBadge status="pending" size="sm" />
           </div>
           <p className="text-xs text-zinc-500">Needs review before 8:00 PM curfew</p>
-        </div>
+        </StaggerItem>
 
-        <div className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
+        <StaggerItem className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Gate Food Orders</span>
             <ShoppingBag className="w-5 h-5 text-orange-500" />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">
-              {activeDeliveries.length}
+              <AnimatedNumber value={activeDeliveries.length} format={(v) => `${Math.round(v)}`} />
             </span>
             <span className="text-xs text-orange-600 font-bold bg-orange-50 dark:bg-orange-950/60 px-2 py-0.5 rounded">
               Swiggy / Zomato
             </span>
           </div>
           <p className="text-xs text-zinc-500">External deliveries en route / at gate</p>
-        </div>
+        </StaggerItem>
 
-        <div className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
+        <StaggerItem className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
             <span className="text-xs font-bold uppercase tracking-wider">Open Maintenance</span>
             <AlertCircle className="w-5 h-5 text-rose-500" />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">
-              {openComplaintsCount}
+              <AnimatedNumber value={openComplaintsCount} format={(v) => `${Math.round(v)}`} />
             </span>
             <span className="text-xs text-rose-600 font-bold bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded">
               Needs IT / Plumbing
             </span>
           </div>
           <p className="text-xs text-zinc-500">Helpdesk tickets in progress</p>
-        </div>
-      </div>
+        </StaggerItem>
+      </Stagger>
 
       {/* Middle Section: Movement Chart & Course Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Live Movement Area Chart (2 Cols) */}
-        <div className="lg:col-span-2 glass-card p-6 rounded-3xl space-y-4">
+        <Reveal className="lg:col-span-2 glass-card p-6 rounded-3xl space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
             <div>
               <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
@@ -196,27 +207,27 @@ export default function WardenDashboard() {
               <AreaChart data={MOVEMENT_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorPres" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#2c7d52" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#2c7d52" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="colorOut" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#8d7cc9" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#8d7cc9" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.15)" vertical={false} />
-                <XAxis dataKey="time" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.9)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px' }} />
-                <Area type="monotone" name="Scholars Inside Campus" dataKey="present" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorPres)" />
-                <Area type="monotone" name="Active Outings / Leaves" dataKey="outpass" stroke="#8B5CF6" strokeWidth={2} fillOpacity={1} fill="url(#colorOut)" />
+                <XAxis dataKey="time" stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: 'rgba(28, 27, 34, 0.95)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px' }} />
+                <Area type="monotone" name="Scholars Inside Campus" dataKey="present" stroke="#2c7d52" strokeWidth={3} fillOpacity={1} fill="url(#colorPres)" />
+                <Area type="monotone" name="Active Outings / Leaves" dataKey="outpass" stroke="#8d7cc9" strokeWidth={2} fillOpacity={1} fill="url(#colorOut)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </Reveal>
 
         {/* Course Allocation Pie Chart (1 Col) */}
-        <div className="glass-card p-6 rounded-3xl space-y-4 flex flex-col justify-between">
+        <Reveal delay={0.08} className="glass-card p-6 rounded-3xl space-y-4 flex flex-col justify-between">
           <div>
             <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
               <Users className="w-5 h-5 text-violet-600" />
@@ -233,7 +244,7 @@ export default function WardenDashboard() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(9, 9, 11, 0.9)', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '11px' }} />
+                <Tooltip contentStyle={{ backgroundColor: 'rgba(28, 27, 34, 0.95)', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '11px' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -246,15 +257,15 @@ export default function WardenDashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </Reveal>
       </div>
 
       {/* Live Swiggy / Zomato Gate Delivery Watchlist */}
-      <div className="glass-card p-6 rounded-3xl space-y-4 border-orange-500/25 bg-gradient-to-br from-orange-50/20 via-transparent to-transparent dark:from-orange-950/10">
+      <Reveal className="glass-card p-6 rounded-3xl space-y-4 border-orange-500/25 bg-gradient-to-br from-orange-50/20 via-transparent to-transparent dark:from-orange-950/10">
         <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <div>
             <h3 className="font-extrabold text-base text-zinc-900 dark:text-white flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-orange-500 animate-bounce" />
+              <ShoppingBag className="w-5 h-5 text-orange-500" />
               <span>Gate Delivery Security Watchlist ({activeDeliveries.length} Active Orders)</span>
             </h3>
             <p className="text-xs text-zinc-500">Real-time radar of Swiggy, Zomato, and Instamart couriers arriving at Block B Gate</p>
@@ -265,13 +276,14 @@ export default function WardenDashboard() {
         </div>
 
         <div className="space-y-3 pt-1">
+          <AnimatePresence initial={false}>
           {activeDeliveries.length === 0 ? (
-            <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500 italic">
+            <motion.div key="deliveries-empty" variants={fadeIn} initial="hidden" animate="visible" exit="hidden" className="p-6 rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500 italic">
               No active food deliveries en route or waiting at security gate right now.
-            </div>
+            </motion.div>
           ) : (
             activeDeliveries.map((deliv) => (
-              <div key={deliv.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <motion.div key={deliv.id} variants={listItem} initial="hidden" animate="visible" exit="exit" layout className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-extrabold text-sm text-zinc-900 dark:text-white">{deliv.studentName}</span>
@@ -306,41 +318,48 @@ export default function WardenDashboard() {
 
                 <div className="flex items-center gap-2 shrink-0">
                   {deliv.status === 'en-route' ? (
-                    <button
+                    <motion.button
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.97 }}
+                      transition={springs.snappy}
                       onClick={() => {
                         updateDeliveryStatus(deliv.id, 'arrived-gate');
                         toast.info(`Marked delivery from ${deliv.platform} as Arrived at Gate! Student alerted.`);
                       }}
-                      className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5"
                     >
                       <Truck className="w-3.5 h-3.5" /> Mark Arrived at Gate
-                    </button>
+                    </motion.button>
                   ) : (
-                    <span className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 font-extrabold text-xs animate-pulse">
+                    <span className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 font-extrabold text-xs">
                       🛵 Waiting at Security Gate
                     </span>
                   )}
-                  <button
+                  <motion.button
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
                     onClick={() => {
                       updateDeliveryStatus(deliv.id, 'collected');
                       toast.success(`Delivery collected by ${deliv.studentName}!`);
                     }}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5"
                   >
                     <PackageCheck className="w-3.5 h-3.5" /> Sign-off Collected
-                  </button>
+                  </motion.button>
                 </div>
-              </div>
+              </motion.div>
             ))
           )}
+          </AnimatePresence>
         </div>
-      </div>
+      </Reveal>
 
       {/* Live Approval Feed (Inline Actions) */}
-      <div className="glass-card p-6 rounded-3xl space-y-4 border-violet-500/20">
+      <Reveal delay={0.05} className="glass-card p-6 rounded-3xl space-y-4 border-violet-500/20">
         <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-500 animate-spin" />
+            <Sparkles className="w-5 h-5 text-amber-500" />
             <span>Live Actionable Approval Queue ({pendingLeaves.length} Pending)</span>
           </h3>
           <Link href="/warden/approvals" className="text-xs font-bold text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-1">
@@ -349,14 +368,15 @@ export default function WardenDashboard() {
         </div>
 
         <div className="space-y-3 pt-1">
+          <AnimatePresence initial={false}>
           {pendingLeaves.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2">
+            <motion.div key="queue-empty" variants={fadeIn} initial="hidden" animate="visible" exit="hidden" className="p-8 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2">
               <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
               <p className="font-bold text-sm text-emerald-800 dark:text-emerald-200">All caught up! Zero pending requests in queue.</p>
-            </div>
+            </motion.div>
           ) : (
             pendingLeaves.slice(0, 3).map((req) => (
-              <div key={req.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-violet-500/40">
+              <motion.div key={req.id} variants={listItem} initial="hidden" animate="visible" exit="exit" layout className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors hover:border-violet-500/40">
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-extrabold text-sm text-zinc-900 dark:text-white">{req.studentName}</span>
@@ -382,24 +402,31 @@ export default function WardenDashboard() {
                 </div>
 
                 <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                  <button
+                  <motion.button
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
                     onClick={() => handleQuickApprove(req.id, req.studentName || 'Student')}
-                    className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-colors flex items-center gap-1.5"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" /> Approve Pass
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
                     onClick={() => handleQuickReject(req.id, req.studentName || 'Student')}
-                    className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition-all flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition-colors flex items-center gap-1.5"
                   >
                     <XCircle className="w-3.5 h-3.5" /> Reject
-                  </button>
+                  </motion.button>
                 </div>
-              </div>
+              </motion.div>
             ))
           )}
+          </AnimatePresence>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useChavaraStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Bell, CheckCheck, Sparkles, ExternalLink, Filter } from 'lucide-react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, listItem, scaleIn, hoverGlow, springs } from '@/lib/motion';
 
 export default function StudentNotificationsPage() {
   const { notifications, markNotificationAsRead, markAllNotificationsAsRead, unreadNotificationCount } = useChavaraStore();
@@ -18,7 +18,7 @@ export default function StudentNotificationsPage() {
   });
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
@@ -32,14 +32,23 @@ export default function StudentNotificationsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {unreadNotificationCount > 0 && (
-            <button
-              onClick={markAllNotificationsAsRead}
-              className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
-            >
-              <CheckCheck className="w-4 h-4" /> Mark all as read
-            </button>
-          )}
+          <AnimatePresence initial={false}>
+            {unreadNotificationCount > 0 && (
+              <motion.button
+                key="mark-all-read"
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={springs.snappy}
+                onClick={markAllNotificationsAsRead}
+                className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5"
+              >
+                <CheckCheck className="w-4 h-4" /> Mark all as read
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -51,50 +60,79 @@ export default function StudentNotificationsPage() {
           { id: 'unread', label: 'Unread Only', count: unreadNotificationCount },
           { id: 'approval', label: 'Warden Approvals', count: notifications.filter(n => n.type === 'approval').length },
         ].map((tab) => (
-          <button
+          <motion.button
             key={tab.id}
             onClick={() => setFilter(tab.id as any)}
+            whileTap={{ scale: 0.97 }}
+            transition={springs.snappy}
             className={cn(
-              'px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5',
+              'relative px-3.5 py-1.5 rounded-xl font-bold text-xs transition-colors flex items-center gap-1.5',
               filter === tab.id
-                ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm'
+                ? 'text-white dark:text-zinc-900'
                 : 'text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             )}
           >
-            <span>{tab.label}</span>
-            <span className={cn('px-1.5 py-0.5 rounded-full text-[10px]', filter === tab.id ? 'bg-violet-600 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400')}>
+            {filter === tab.id && (
+              <motion.div
+                layoutId="notif-filter-pill"
+                transition={springs.soft}
+                className="absolute inset-0 rounded-xl bg-zinc-900 dark:bg-white shadow-sm"
+              />
+            )}
+            <span className="relative z-10">{tab.label}</span>
+            <span className={cn('relative z-10 px-1.5 py-0.5 rounded-full text-[10px]', filter === tab.id ? 'bg-violet-600 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400')}>
               {tab.count}
             </span>
-          </button>
+          </motion.button>
         ))}
       </div>
 
       {/* Notifications List */}
       <div className="space-y-3">
+        <AnimatePresence initial={false}>
         {filteredNotifications.length === 0 ? (
-          <div className="glass-card p-12 rounded-3xl text-center space-y-3">
-            <Sparkles className="w-10 h-10 text-zinc-300 dark:text-zinc-700 mx-auto animate-pulse" />
+          <motion.div
+            key="empty-state"
+            variants={listItem}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="glass-card p-12 rounded-3xl text-center space-y-3"
+          >
+            <Sparkles className="w-10 h-10 text-zinc-300 dark:text-zinc-700 mx-auto" />
             <h3 className="font-bold text-base text-zinc-900 dark:text-white">No notifications found</h3>
             <p className="text-xs text-zinc-500">There are no notifications matching your current filter.</p>
-          </div>
+          </motion.div>
         ) : (
-          filteredNotifications.map((notif, idx) => (
+          filteredNotifications.map((notif) => (
             <motion.div
               key={notif.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
+              variants={listItem}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              layout
+              {...hoverGlow}
               onClick={() => markNotificationAsRead(notif.id)}
               className={cn(
-                'p-5 rounded-2xl border transition-all cursor-pointer relative group flex flex-col sm:flex-row sm:items-center justify-between gap-4',
+                'p-5 rounded-2xl border transition-colors cursor-pointer relative group flex flex-col sm:flex-row sm:items-center justify-between gap-4',
                 notif.read
                   ? 'bg-white/60 dark:bg-zinc-900/40 border-zinc-200/60 dark:border-zinc-800/60'
                   : 'bg-white dark:bg-zinc-900 border-violet-500/40 shadow-lg shadow-violet-500/5 ring-1 ring-violet-500/20'
               )}
             >
-              {!notif.read && (
-                <span className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-violet-600 animate-pulse" />
-              )}
+              <AnimatePresence>
+                {!notif.read && (
+                  <motion.span
+                    key="unread-dot"
+                    variants={scaleIn}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-violet-600"
+                  />
+                )}
+              </AnimatePresence>
 
               <div className="space-y-1 flex-1 pr-6">
                 <div className="flex items-center gap-2">
@@ -125,6 +163,7 @@ export default function StudentNotificationsPage() {
             </motion.div>
           ))
         )}
+        </AnimatePresence>
       </div>
     </div>
   );
