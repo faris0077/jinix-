@@ -62,10 +62,24 @@ import {
 } from './supabase';
 import { toast } from 'sonner';
 
+/**
+ * 'local'         — no Supabase configured; old frictionless demo picker.
+ * 'loading'       — cloud mode, checking for an existing session.
+ * 'authenticated' — cloud mode, real signed-in Supabase Auth session.
+ * 'unauthenticated' — cloud mode, no session; app should show the login page.
+ */
+type AuthStatus = 'local' | 'loading' | 'authenticated' | 'unauthenticated';
+
 interface ChavaraStoreContextType {
   currentUser: User;
   switchRole: (role: UserRole) => void;
   setCurrentUser: (user: User) => void;
+  authStatus: AuthStatus;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string; user?: User }>;
+  logout: () => Promise<void>;
+  changeOwnPassword: (newPassword: string) => Promise<{ ok: boolean; error?: string }>;
+  /** Current session's access token, for calling the /api/admin/* routes. Null outside cloud mode. */
+  getAccessToken: () => Promise<string | null>;
 
   users: User[];
   leaveRequests: LeaveRequest[];
@@ -146,6 +160,7 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
   const [roomChangeRequests, setRoomChangeRequests] = useState<RoomChangeRequest[]>(INITIAL_ROOM_CHANGES);
   const [notices, setNotices] = useState<Notice[]>(INITIAL_NOTICES);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>(isSupabaseConfigured ? 'loading' : 'local');
   const usersRef = useRef(users);
   usersRef.current = users;
 
@@ -228,23 +243,54 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
     'lost_found_items', 'room_change_requests', 'notices',
   ];
 
+  /** Fetches all tables, then resolves currentUser from the given auth user id. */
+  const loadForAuthUser = async (authUserId: string): Promise<User | null> => {
+    const { data: profile, error } = await supabase!
+      .from('users')
+      .select('*')
+      .eq('auth_user_id', authUserId)
+      .maybeSingle();
+
+    if (error || !profile) {
+      await supabase!.auth.signOut();
+      setAuthStatus('unauthenticated');
+      toast.error('No portal profile is linked to this account.', {
+        description: 'Ask a warden or director to check your account setup.',
+      });
+      return null;
+    }
+
+    const resolvedUser = userFromRow(profile);
+    setCurrentUserState(resolvedUser);
+    await Promise.all(ALL_TABLES.map(fetchTable));
+    setAuthStatus('authenticated');
+    return resolvedUser;
+  };
+
   // Initial load
   useEffect(() => {
-    // Restore the demo session (which user/role is active) in both modes.
-    try {
-      const savedUser = localStorage.getItem(USER_KEY);
-      if (savedUser) setCurrentUserState(JSON.parse(savedUser));
-    } catch { /* ignore */ }
-
     if (isSupabaseConfigured && supabase) {
-      Promise.all(ALL_TABLES.map(fetchTable))
+      supabase.auth.getSession()
+        .then(({ data }) => {
+          if (data.session) {
+            return loadForAuthUser(data.session.user.id);
+          }
+          setAuthStatus('unauthenticated');
+        })
         .catch((e) => {
-          console.error('Supabase initial load failed', e);
-          toast.error('Could not reach Supabase — using local demo data.');
+          console.error('Supabase session check failed', e);
+          toast.error('Could not reach Supabase.');
+          setAuthStatus('unauthenticated');
         })
         .finally(() => setIsLoaded(true));
       return;
     }
+
+    // Restore the demo session (which user/role is active) in local mode.
+    try {
+      const savedUser = localStorage.getItem(USER_KEY);
+      if (savedUser) setCurrentUserState(JSON.parse(savedUser));
+    } catch { /* ignore */ }
 
     // Local mode: hydrate everything from localStorage as before.
     try {
@@ -289,11 +335,21 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
 
   /* ----------------------------- persistence ----------------------------- */
 
-  // Always remember which demo user is active.
+  // Always remember which demo user is active (local mode only — cloud mode
+  // relies on the real Supabase Auth session instead).
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || isSupabaseConfigured) return;
     try { localStorage.setItem(USER_KEY, JSON.stringify(currentUser)); } catch { /* ignore */ }
   }, [currentUser, isLoaded]);
+
+  // React to sign-out/session-expiry events (e.g. another tab logging out).
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') setAuthStatus('unauthenticated');
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   // Local mode only: persist the full dataset (in cloud mode the DB owns it).
   useEffect(() => {
@@ -322,6 +378,10 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
   /* -------------------------------- actions -------------------------------- */
 
   const switchRole = (role: UserRole) => {
+    if (isSupabaseConfigured) {
+      toast.error('Demo role-switching is disabled — sign in with a real account.');
+      return;
+    }
     const found = users.find((u) => u.role === role);
     if (found) {
       setCurrentUserState(found);
@@ -332,6 +392,48 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
   const setCurrentUser = (user: User) => {
     setCurrentUserState(user);
     toast.success(`Logged in as ${user.name}`);
+  };
+
+  const login = async (email: string, password: string): Promise<{ ok: boolean; error?: string; user?: User }> => {
+    if (!isSupabaseConfigured || !supabase) {
+      return { ok: false, error: 'Cloud login is not configured on this deployment.' };
+    }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) {
+      return { ok: false, error: error?.message ?? 'Invalid email or password.' };
+    }
+    const resolvedUser = await loadForAuthUser(data.user.id);
+    if (!resolvedUser) {
+      return { ok: false, error: 'No portal profile is linked to this account.' };
+    }
+    return { ok: true, user: resolvedUser };
+  };
+
+  const logout = async () => {
+    if (isSupabaseConfigured && supabase) {
+      await supabase.auth.signOut();
+    }
+    setAuthStatus('unauthenticated');
+    toast.info('Signed out.');
+  };
+
+  const changeOwnPassword = async (newPassword: string): Promise<{ ok: boolean; error?: string }> => {
+    if (!isSupabaseConfigured || !supabase) {
+      return { ok: false, error: 'Not available in local demo mode.' };
+    }
+    if (newPassword.length < 6) {
+      return { ok: false, error: 'Password must be at least 6 characters.' };
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return { ok: false, error: error.message };
+    toast.success('Password changed successfully.');
+    return { ok: true };
+  };
+
+  const getAccessToken = async (): Promise<string | null> => {
+    if (!isSupabaseConfigured || !supabase) return null;
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
   };
 
   const addNotification = (notif: Omit<NotificationItem, 'id' | 'timestamp' | 'read'>) => {
@@ -697,6 +799,11 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
         currentUser,
         switchRole,
         setCurrentUser,
+        authStatus,
+        login,
+        logout,
+        changeOwnPassword,
+        getAccessToken,
         users,
         leaveRequests,
         foodOrders,

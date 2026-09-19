@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useChavaraStore } from '@/lib/store';
 import { UserRole } from '@/lib/mock-data';
@@ -33,14 +33,21 @@ import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { switchRole } = useChavaraStore();
+  const { switchRole, login, isCloudSynced, authStatus, currentUser } = useChavaraStore();
 
   const [role, setRole] = useState<UserRole>('student');
-  const [email, setEmail] = useState('ananya.sharma@chavara.edu');
-  const [password, setPassword] = useState('••••••••••••');
+  const [email, setEmail] = useState(isCloudSynced ? '' : 'ananya.sharma@chavara.edu');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Already signed in (e.g. navigated back to /login manually) — bounce to the dashboard.
+  useEffect(() => {
+    if (authStatus === 'authenticated') {
+      router.replace(`/${currentUser.role}/dashboard`);
+    }
+  }, [authStatus, currentUser.role, router]);
 
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
@@ -49,10 +56,25 @@ export default function LoginPage() {
     if (newRole === 'director') setEmail('celine.dsouza@chavara.edu');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
+    if (isCloudSynced) {
+      const result = await login(email, password);
+      setIsLoading(false);
+      if (!result.ok || !result.user) {
+        toast.error('Sign in failed', { description: result.error ?? 'Check your email and password.' });
+        return;
+      }
+      toast.success('Welcome back to Chavara Residence OS!', {
+        description: `Logged into ${result.user.role.toUpperCase()} portal.`,
+      });
+      router.push(`/${result.user.role}/dashboard`);
+      return;
+    }
+
+    // Local demo mode: no real credentials exist — the role tab picks the persona.
     setTimeout(() => {
       setIsLoading(false);
       switchRole(role);
@@ -164,52 +186,58 @@ export default function LoginPage() {
           <StaggerItem className="space-y-2">
             <h2 className="text-3xl font-bold tracking-tight text-white">Sign in to Portal</h2>
             <p className="text-sm text-zinc-400">
-              Select your authorization role and access your residence dashboard.
+              {isCloudSynced
+                ? 'Enter your Chavara Residence email and password.'
+                : 'Select your authorization role and access your residence dashboard.'}
             </p>
           </StaggerItem>
 
-          {/* Interactive Role Selector Tabs */}
-          <StaggerItem className="p-1.5 rounded-2xl bg-zinc-900 border border-zinc-800 grid grid-cols-3 gap-1.5 shadow-inner">
-            {[
-              { id: 'student', label: 'Student', icon: GraduationCap },
-              { id: 'warden', label: 'Warden', icon: UserCheck },
-              { id: 'director', label: 'Director', icon: Building },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isSelected = role === tab.id;
-              return (
-                <motion.button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => handleRoleChange(tab.id as UserRole)}
-                  whileTap={{ scale: 0.97 }}
-                  transition={springs.snappy}
-                  className={cn(
-                    'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-colors relative',
-                    isSelected
-                      ? 'text-white'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-                  )}
-                >
-                  {isSelected && (
-                    <motion.div
-                      layoutId="role-tab-pill"
-                      className="absolute inset-0 rounded-xl bg-violet-600 shadow-lg shadow-violet-600/30"
-                      transition={springs.soft}
-                    />
-                  )}
-                  <Icon className="w-3.5 h-3.5 shrink-0 relative z-10" />
-                  <span className="relative z-10">{tab.label}</span>
-                </motion.button>
-              );
-            })}
-          </StaggerItem>
+          {/* Interactive Role Selector Tabs — demo mode only; a real account already knows its own role. */}
+          {!isCloudSynced && (
+            <StaggerItem className="p-1.5 rounded-2xl bg-zinc-900 border border-zinc-800 grid grid-cols-3 gap-1.5 shadow-inner">
+              {[
+                { id: 'student', label: 'Student', icon: GraduationCap },
+                { id: 'warden', label: 'Warden', icon: UserCheck },
+                { id: 'director', label: 'Director', icon: Building },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isSelected = role === tab.id;
+                return (
+                  <motion.button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => handleRoleChange(tab.id as UserRole)}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springs.snappy}
+                    className={cn(
+                      'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-colors relative',
+                      isSelected
+                        ? 'text-white'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                    )}
+                  >
+                    {isSelected && (
+                      <motion.div
+                        layoutId="role-tab-pill"
+                        className="absolute inset-0 rounded-xl bg-violet-600 shadow-lg shadow-violet-600/30"
+                        transition={springs.soft}
+                      />
+                    )}
+                    <Icon className="w-3.5 h-3.5 shrink-0 relative z-10" />
+                    <span className="relative z-10">{tab.label}</span>
+                  </motion.button>
+                );
+              })}
+            </StaggerItem>
+          )}
 
-          {/* Role Status Note */}
-          <StaggerItem className="p-3 rounded-xl bg-violet-950/30 border border-violet-500/20 flex items-center gap-2.5 text-xs text-violet-300">
-            <CheckCircle2 className="w-4 h-4 text-violet-400 shrink-0" />
-            <span>Demo Mode Active: Logging in as <strong>{role === 'student' ? 'Ananya Sharma (Student)' : role === 'warden' ? 'Dr. Sr. Mary Thomas (Warden)' : "Rev. Sr. Celine D'Souza (Director)"}</strong>.</span>
-          </StaggerItem>
+          {/* Role Status Note — demo mode only */}
+          {!isCloudSynced && (
+            <StaggerItem className="p-3 rounded-xl bg-violet-950/30 border border-violet-500/20 flex items-center gap-2.5 text-xs text-violet-300">
+              <CheckCircle2 className="w-4 h-4 text-violet-400 shrink-0" />
+              <span>Demo Mode Active: Logging in as <strong>{role === 'student' ? 'Ananya Sharma (Student)' : role === 'warden' ? 'Dr. Sr. Mary Thomas (Warden)' : "Rev. Sr. Celine D'Souza (Director)"}</strong>.</span>
+            </StaggerItem>
+          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -224,6 +252,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder={isCloudSynced ? 'you@chavara.edu' : undefined}
                   required
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-medium"
                 />
@@ -233,7 +262,7 @@ export default function LoginPage() {
             <StaggerItem className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300 flex items-center justify-between">
                 <span>Password</span>
-                <a href="#forgot" onClick={(e) => { e.preventDefault(); toast.info('Password reset instructions sent to your campus email.'); }} className="text-[11px] text-violet-400 hover:underline font-normal capitalize">
+                <a href="#forgot" onClick={(e) => { e.preventDefault(); toast.info(isCloudSynced ? 'Ask a warden or director to reset your password from Manage Accounts.' : 'Password reset instructions sent to your campus email.'); }} className="text-[11px] text-violet-400 hover:underline font-normal capitalize">
                   Forgot Password?
                 </a>
               </label>
@@ -243,6 +272,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder={isCloudSynced ? 'Your password' : undefined}
                   required
                   className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-medium"
                 />
@@ -301,7 +331,7 @@ export default function LoginPage() {
                       transition={{ duration: 0.25, ease: EASE_OUT }}
                       className="flex items-center justify-center gap-2"
                     >
-                      <span>Sign in as {role.toUpperCase()}</span>
+                      <span>{isCloudSynced ? 'Sign In' : `Sign in as ${role.toUpperCase()}`}</span>
                       <ArrowRight className="w-4 h-4" />
                     </motion.span>
                   )}

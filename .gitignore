@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# real applicant/student PII — never commit to this (public) repo
+*.xlsx
+*.xls
+*.csv
+!public/**/*.csv
+supabase/applicants_data.sql

@@ -13,13 +13,20 @@ import {
   Laptop,
   Check,
   ChevronRight,
+  ChevronDown,
   Sparkles,
   ExternalLink,
   CheckCheck,
   X,
+  KeyRound,
+  LogOut,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { motion, AnimatePresence, springs, scaleIn, EASE_OUT } from '@/lib/motion';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface HeaderProps {
   onOpenCommandPalette?: () => void;
@@ -27,9 +34,26 @@ interface HeaderProps {
 
 export function Header({ onOpenCommandPalette }: HeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
-  const { notifications, markNotificationAsRead, markAllNotificationsAsRead, unreadNotificationCount, currentUser } = useChavaraStore();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const {
+    notifications,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    unreadNotificationCount,
+    currentUser,
+    isCloudSynced,
+    logout,
+  } = useChavaraStore();
+
+  const handleLogout = async () => {
+    setIsUserMenuOpen(false);
+    await logout();
+    router.push('/login');
+  };
 
   // Generate dynamic breadcrumbs from pathname
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -128,25 +152,75 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
             </motion.button>
           </div>
 
-          {/* User Mini Avatar Badge */}
-          <Link
-            href={`/${currentUser.role}/profile`}
-            className="flex items-center gap-2 pl-2 border-l border-zinc-200/80 dark:border-zinc-800/80 group"
-          >
-            <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-violet-500/20 group-hover:ring-violet-500 transition-all"
-            />
-            <div className="hidden md:flex flex-col text-left leading-none">
-              <span className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
-                {currentUser.name.split(' ')[0]}
-              </span>
-              <span className="text-[10px] text-zinc-500 capitalize mt-0.5">{currentUser.role}</span>
-            </div>
-          </Link>
+          {/* User Mini Avatar Badge + Dropdown */}
+          <div className="relative pl-2 border-l border-zinc-200/80 dark:border-zinc-800/80">
+            <motion.button
+              onClick={() => setIsUserMenuOpen((v) => !v)}
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
+              className="flex items-center gap-2 group"
+            >
+              <img
+                src={currentUser.avatar}
+                alt={currentUser.name}
+                className="w-8 h-8 rounded-full object-cover ring-2 ring-violet-500/20 group-hover:ring-violet-500 transition-all"
+              />
+              <div className="hidden md:flex flex-col text-left leading-none">
+                <span className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                  {currentUser.name.split(' ')[0]}
+                </span>
+                <span className="text-[10px] text-zinc-500 capitalize mt-0.5">{currentUser.role}</span>
+              </div>
+              <ChevronDown className="hidden md:block w-3.5 h-3.5 text-zinc-400 group-hover:text-violet-500 transition-colors" />
+            </motion.button>
+
+            <AnimatePresence>
+              {isUserMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setIsUserMenuOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.97, y: -6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.97, y: -6, transition: { duration: 0.15 } }}
+                    transition={springs.snappy}
+                    className="absolute right-0 top-12 w-56 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xl z-40 overflow-hidden"
+                  >
+                    <div className="p-3 border-b border-zinc-100 dark:border-zinc-800">
+                      <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">{currentUser.name}</p>
+                      <p className="text-xs text-zinc-500 truncate">{currentUser.email}</p>
+                    </div>
+                    <div className="p-1.5">
+                      <Link
+                        href={`/${currentUser.role}/profile`}
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+                      >
+                        <Sparkles className="w-4 h-4 text-violet-500" /> My Profile
+                      </Link>
+                      {isCloudSynced && (
+                        <button
+                          onClick={() => { setIsUserMenuOpen(false); setIsPasswordModalOpen(true); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+                        >
+                          <KeyRound className="w-4 h-4 text-violet-500" /> Change Password
+                        </button>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" /> {isCloudSynced ? 'Sign Out' : 'Exit Demo'}
+                      </button>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </header>
+
+      <ChangePasswordModal open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen} />
 
       {/* Notification Slide-over Drawer */}
       <AnimatePresence>
@@ -268,5 +342,116 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
         )}
       </AnimatePresence>
     </>
+  );
+}
+
+function ChangePasswordModal({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { changeOwnPassword } = useChavaraStore();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const close = () => {
+    onOpenChange(false);
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match.');
+      return;
+    }
+    setIsSubmitting(true);
+    const result = await changeOwnPassword(newPassword);
+    setIsSubmitting(false);
+    if (!result.ok) {
+      toast.error('Could not change password', { description: result.error });
+      return;
+    }
+    close();
+  };
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={close}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+          />
+          <motion.div
+            variants={scaleIn}
+            initial="hidden"
+            animate="visible"
+            exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.15 } }}
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-50 p-6 space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-violet-500" /> Change Password
+              </h3>
+              <button onClick={close} className="w-7 h-7 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center text-zinc-500">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">New Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    minLength={6}
+                    required
+                    autoFocus
+                    className="w-full pr-10 pl-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-3 text-zinc-500"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Confirm Password</label>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={6}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                />
+              </div>
+              <p className="text-[11px] text-zinc-500 leading-relaxed">
+                At least 6 characters. Choose something only you know — not your phone number.
+              </p>
+              <motion.button
+                type="submit"
+                disabled={isSubmitting}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={springs.snappy}
+                className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm shadow-md transition-colors disabled:opacity-50"
+              >
+                {isSubmitting ? 'Saving...' : 'Save New Password'}
+              </motion.button>
+            </form>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }

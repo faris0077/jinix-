@@ -32,7 +32,8 @@ import {
   ArrowRightLeft,
   Search,
   Bed,
-  Megaphone
+  Megaphone,
+  KeyRound
 } from 'lucide-react';
 import { motion, AnimatePresence, springs, EASE_OUT } from '@/lib/motion';
 
@@ -41,7 +42,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [activeHash, setActiveHash] = useState('');
-  const { currentUser, switchRole, unreadNotificationCount, pendingLeaves } = useChavaraStore();
+  const { currentUser, switchRole, unreadNotificationCount, pendingLeaves, isCloudSynced } = useChavaraStore();
 
   useEffect(() => {
     setActiveHash(window.location.hash);
@@ -85,6 +86,7 @@ export function Sidebar() {
     { name: 'Security Log', href: '/warden/visitors', icon: ShieldCheck },
     { name: 'Room Changes', href: '/warden/room-changes', icon: Bed, badge: 'New' },
     { name: 'Audit Reports', href: '/warden/reports', icon: FileText },
+    { name: 'Manage Accounts', href: '/warden/accounts', icon: KeyRound },
   ];
 
   const directorNavigation: NavItem[] = [
@@ -92,6 +94,7 @@ export function Sidebar() {
     { name: 'Revenue & Finance', href: '/director/dashboard#revenue', icon: Award },
     { name: 'Occupancy Map', href: '/director/dashboard#occupancy', icon: Building2 },
     { name: 'Export Reports', href: '/director/reports', icon: FileText },
+    { name: 'Manage Accounts', href: '/warden/accounts', icon: KeyRound },
   ];
 
   const navItems: NavItem[] = 
@@ -282,43 +285,45 @@ export function Sidebar() {
               </div>
             </div>
 
-            {/* Interactive Role Switcher Pills */}
-            <div className="pt-1">
-              <p className="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 mb-1 px-1 flex items-center justify-between">
-                <span>Switch Demo View</span>
-                <ArrowRightLeft className="w-3 h-3" />
-              </p>
-              <div className="grid grid-cols-3 gap-1">
-                {(['student', 'warden', 'director'] as const).map((role) => (
-                  <motion.button
-                    key={role}
-                    onClick={() => {
-                      switchRole(role);
-                      router.push(`/${role}/dashboard`);
-                    }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={springs.snappy}
-                    className={cn(
-                      'relative text-[10px] py-1 rounded-lg font-bold uppercase transition-colors',
-                      currentUser.role === role
-                        ? 'text-white'
-                        : 'bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700'
-                    )}
-                  >
-                    {currentUser.role === role && (
-                      <motion.div
-                        layoutId="sidebar-role-pill"
-                        transition={springs.soft}
-                        className="absolute inset-0 rounded-lg bg-violet-600 shadow-sm"
-                      />
-                    )}
-                    <span className="relative z-10">
-                      {role === 'student' ? 'Stu' : role === 'warden' ? 'War' : 'Dir'}
-                    </span>
-                  </motion.button>
-                ))}
+            {/* Interactive Role Switcher Pills — local demo mode only; a real account has one fixed role. */}
+            {!isCloudSynced && (
+              <div className="pt-1">
+                <p className="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 mb-1 px-1 flex items-center justify-between">
+                  <span>Switch Demo View</span>
+                  <ArrowRightLeft className="w-3 h-3" />
+                </p>
+                <div className="grid grid-cols-3 gap-1">
+                  {(['student', 'warden', 'director'] as const).map((role) => (
+                    <motion.button
+                      key={role}
+                      onClick={() => {
+                        switchRole(role);
+                        router.push(`/${role}/dashboard`);
+                      }}
+                      whileTap={{ scale: 0.97 }}
+                      transition={springs.snappy}
+                      className={cn(
+                        'relative text-[10px] py-1 rounded-lg font-bold uppercase transition-colors',
+                        currentUser.role === role
+                          ? 'text-white'
+                          : 'bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700'
+                      )}
+                    >
+                      {currentUser.role === role && (
+                        <motion.div
+                          layoutId="sidebar-role-pill"
+                          transition={springs.soft}
+                          className="absolute inset-0 rounded-lg bg-violet-600 shadow-sm"
+                        />
+                      )}
+                      <span className="relative z-10">
+                        {role === 'student' ? 'Stu' : role === 'warden' ? 'War' : 'Dir'}
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
@@ -328,20 +333,22 @@ export function Sidebar() {
               className="w-8 h-8 rounded-full object-cover ring-2 ring-violet-500/20"
               title={`${currentUser.name} (${currentUser.role})`}
             />
-            <motion.button
-              onClick={() => {
-                const nextRole = currentUser.role === 'student' ? 'warden' : currentUser.role === 'warden' ? 'director' : 'student';
-                switchRole(nextRole);
-                router.push(`/${nextRole}/dashboard`);
-              }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              transition={springs.snappy}
-              className="w-8 h-8 rounded-lg bg-zinc-200/80 dark:bg-zinc-800 hover:bg-violet-600 hover:text-white flex items-center justify-center text-xs font-bold uppercase transition-colors"
-              title="Switch Demo Role"
-            >
-              <ArrowRightLeft className="w-3.5 h-3.5" />
-            </motion.button>
+            {!isCloudSynced && (
+              <motion.button
+                onClick={() => {
+                  const nextRole = currentUser.role === 'student' ? 'warden' : currentUser.role === 'warden' ? 'director' : 'student';
+                  switchRole(nextRole);
+                  router.push(`/${nextRole}/dashboard`);
+                }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={springs.snappy}
+                className="w-8 h-8 rounded-lg bg-zinc-200/80 dark:bg-zinc-800 hover:bg-violet-600 hover:text-white flex items-center justify-center text-xs font-bold uppercase transition-colors"
+                title="Switch Demo Role"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5" />
+              </motion.button>
+            )}
           </div>
         )}
       </div>

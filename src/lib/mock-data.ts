@@ -14,6 +14,8 @@ export interface User {
   parentPhone?: string;
   balance?: number;
   attendanceToday?: 'present' | 'on-leave' | 'outpass' | 'library';
+  /** Links this row to a real Supabase Auth account. Absent in local/demo mode. */
+  authUserId?: string;
 }
 
 export interface LeaveRequest {

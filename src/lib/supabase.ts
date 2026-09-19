@@ -56,6 +56,7 @@ export const userFromRow = (r: any): User => ({
   parentPhone: opt(r.parent_phone),
   balance: r.balance === null ? undefined : Number(r.balance),
   attendanceToday: opt(r.attendance_today),
+  authUserId: opt(r.auth_user_id),
 });
 
 export const userToRow = (u: User) => ({
