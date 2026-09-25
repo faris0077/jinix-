@@ -7,6 +7,34 @@ import { Header } from './Header';
 import { CommandPalette } from '@/components/ui/CommandPalette';
 import { useChavaraStore } from '@/lib/store';
 
+function AmbientBackground() {
+  return (
+    <div aria-hidden className="ambient-bg ambient-noise pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <div className="orb orb-a" />
+      <div className="orb orb-b" />
+      <div className="orb orb-c" />
+    </div>
+  );
+}
+
+function SplashLoader() {
+  return (
+    <main className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
+      <AmbientBackground />
+      <div className="relative z-10 glass-strong rounded-3xl px-10 py-9 flex flex-col items-center gap-5">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-700 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-teal-600/30 ring-1 ring-white/30">
+          C
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-semibold text-zinc-900 dark:text-white">Chavara Residence OS</p>
+          <p className="text-xs text-zinc-500">Preparing your workspace…</p>
+        </div>
+        <div className="skeleton h-1.5 w-40 !rounded-full" />
+      </div>
+    </main>
+  );
+}
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -33,27 +61,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   // While checking for an existing session, or once we know there isn't one
-  // and a redirect to /login is in flight, render nothing rather than a
+  // and a redirect to /login is in flight, show the splash rather than a
   // flash of another user's last-seen dashboard.
   if (authStatus === 'loading' || authStatus === 'unauthenticated') {
-    return (
-      <main className="min-h-screen w-full bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
-      </main>
-    );
+    return <SplashLoader />;
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
-      {/* Left Collapsible Sidebar */}
+    <div className="relative flex h-screen w-full overflow-hidden bg-background p-3 gap-3">
+      <AmbientBackground />
+
+      {/* Floating glass sidebar */}
       <Sidebar />
 
-      {/* Main Content Area with Sticky Header */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+      {/* Main column: floating glass header + scrolling content */}
+      <div className="relative flex-1 flex flex-col min-w-0 gap-3">
         <Header onOpenCommandPalette={() => setIsCommandOpen(true)} />
 
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-background/60">
-          <div className="max-w-7xl mx-auto space-y-8 pb-16">
+        <main className="flex-1 overflow-y-auto rounded-3xl px-1 md:px-2 py-1">
+          <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 pb-16">
             {children}
           </div>
         </main>

@@ -27,9 +27,15 @@ export default function FeePaymentPage() {
   const pendingAmount = feePayments.filter((f) => f.status === 'pending' || f.status === 'overdue').reduce((acc, curr) => acc + curr.amount, 0);
   const paidAmount = feePayments.filter((f) => f.status === 'paid').reduce((acc, curr) => acc + curr.amount, 0);
 
+  const nextDue = feePayments
+    .filter((f) => f.status === 'pending' || f.status === 'overdue')
+    .map((f) => f.dueDate)
+    .filter(Boolean)
+    .sort()[0];
+
   const handleDownloadReceipt = (receiptNo: string) => {
-    toast.success('Downloading PDF Receipt...', {
-      description: `Official Chavara digital receipt ${receiptNo}.pdf saved to device.`,
+    toast.info(`Receipt ${receiptNo}`, {
+      description: 'This payment is recorded in your account.',
     });
   };
 
@@ -105,7 +111,7 @@ export default function FeePaymentPage() {
                 onClick={() => handleDownloadReceipt(item.receiptNo!)}
                 className="px-3 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-violet-50 dark:hover:bg-violet-950/60 text-zinc-700 dark:text-zinc-300 hover:text-violet-600 font-bold text-xs flex items-center gap-1.5 transition-colors"
               >
-                <Download className="w-3.5 h-3.5 text-emerald-500" /> Receipt #{item.receiptNo.split('-')[2]}
+                <Download className="w-3.5 h-3.5 text-emerald-500" /> Receipt {item.receiptNo}
               </motion.button>
             ) : (
               <motion.button
@@ -118,7 +124,7 @@ export default function FeePaymentPage() {
                 whileTap={{ scale: 0.97 }}
                 transition={springs.snappy}
                 onClick={() => payFee(item.id)}
-                className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5"
+                className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-teal-700 hover:from-violet-500 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5"
               >
                 <CreditCard className="w-3.5 h-3.5" /> Pay Now ${item.amount}
               </motion.button>
@@ -137,20 +143,20 @@ export default function FeePaymentPage() {
           <span>Semester Fee Payment & Digital Receipts</span>
         </h1>
         <p className="text-sm text-zinc-500 mt-1">
-          Stripe-secured payment gateway for hostel accommodation, mess advance, and amenities invoices.
+          Hostel accommodation, mess advance, and amenities invoices and payment records.
         </p>
       </div>
 
       {/* Financial Overview Cards */}
       <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StaggerItem className="h-full">
-          <TiltCard max={4} className="h-full p-6 rounded-3xl bg-gradient-to-br from-violet-900 via-purple-900 to-zinc-950 text-white border border-violet-500/30 shadow-xl space-y-2 relative overflow-hidden">
+          <TiltCard max={4} className="h-full p-6 rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 hero-surface text-white border border-violet-500/30 shadow-xl space-y-2 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
             <span className="text-xs font-bold uppercase tracking-wider text-violet-300 block">Total Outstanding Due</span>
             <span className="text-3xl font-extrabold block">
               <AnimatedNumber value={pendingAmount} format={(v) => `$${Math.round(v)}`} />
             </span>
-            <p className="text-xs text-zinc-300">Next billing date: July 31st, 2026</p>
+            <p className="text-xs text-zinc-300">{nextDue ? `Next due date: ${nextDue}` : 'No upcoming dues'}</p>
           </TiltCard>
         </StaggerItem>
 
@@ -159,15 +165,15 @@ export default function FeePaymentPage() {
           <span className="text-3xl font-extrabold text-emerald-600 block">
             <AnimatedNumber value={paidAmount} format={(v) => `$${Math.round(v)}`} />
           </span>
-          <p className="text-xs text-zinc-500">All invoices verified by accounts dept</p>
+          <p className="text-xs text-zinc-500">Total of invoices marked as paid</p>
         </StaggerItem>
 
         <StaggerItem className="glass-card p-6 rounded-3xl space-y-3 flex flex-col justify-center border-emerald-500/30">
           <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
-            <ShieldCheck className="w-5 h-5" /> 256-Bit SSL Encrypted
+            <ShieldCheck className="w-5 h-5" /> Payment Records
           </div>
           <p className="text-xs text-zinc-500">
-            Instant PDF receipt download with Chavara Accounts barcode endorsement.
+            {feePayments.length === 0 ? 'No invoices have been issued yet.' : `${feePayments.filter((f) => f.status === 'paid').length} of ${feePayments.length} invoices paid.`}
           </p>
         </StaggerItem>
       </Stagger>

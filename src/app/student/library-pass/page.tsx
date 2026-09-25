@@ -20,9 +20,9 @@ import { toast } from 'sonner';
 
 export default function StudentLibraryPassPage() {
   const { currentUser, studentLeaves, addLeaveRequest, logStudentReturn } = useChavaraStore();
-  const [section, setSection] = useState('Central Digital AI & Reference Lab (Block C)');
+  const [section, setSection] = useState('');
   const [reason, setReason] = useState('');
-  const [returnTime, setReturnTime] = useState('22:30');
+  const [returnTime, setReturnTime] = useState('');
 
   const libraryLogs = studentLeaves.filter((l) => l.type === 'library');
   const activeLibraryLog = libraryLogs.find((l) => l.status === 'approved' || l.status === 'pending');
@@ -38,7 +38,7 @@ export default function StudentLibraryPassPage() {
     addLeaveRequest({
       type: 'library',
       startDate: new Date().toISOString().split('T')[0],
-      startTime: '18:30',
+      startTime: new Date().toTimeString().slice(0, 5),
       endTime: returnTime,
       reason: `Evening Study: ${reason} (${section})`,
       destination: section,
@@ -59,16 +59,10 @@ export default function StudentLibraryPassPage() {
             <span>Central Library Study Register</span>
           </h1>
           <p className="text-sm text-zinc-500 mt-1">
-            Register evening and post-curfew study sessions at the Chavara Central Library.
+            Register evening and post-curfew study sessions at the Central Library.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-xl border border-purple-300/40 flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-purple-600" />
-            Library Closing: 11:00 PM
-          </span>
-        </div>
       </div>
 
       <Stagger className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -80,9 +74,6 @@ export default function StudentLibraryPassPage() {
                 <Send className="w-5 h-5 text-purple-600" />
                 <span>Register Evening Study Session</span>
               </h3>
-              <span className="text-xs font-bold text-purple-600 bg-purple-50 dark:bg-purple-950/60 px-2.5 py-1 rounded-lg">
-                Curfew Extension Active
-              </span>
             </div>
 
             <form onSubmit={handleLogLibrary} className="space-y-4">
@@ -90,16 +81,14 @@ export default function StudentLibraryPassPage() {
                 <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
                   Library Wing / Reading Section <span className="text-rose-500">*</span>
                 </label>
-                <select
+                <input
+                  type="text"
                   value={section}
                   onChange={(e) => setSection(e.target.value)}
+                  placeholder="Where will you study?"
+                  required
                   className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium"
-                >
-                  <option value="Central Digital AI & Reference Lab (Block C)">Central Digital AI & Reference Lab (Block C)</option>
-                  <option value="Post-Graduate Silent Reading Hall (Block A)">Post-Graduate Silent Reading Hall (Block A)</option>
-                  <option value="Architecture & Design Periodicals Wing (Block D)">Architecture & Design Periodicals Wing (Block D)</option>
-                  <option value="24/7 Collaborative Study Center (Main Campus)">24/7 Collaborative Study Center (Main Campus)</option>
-                </select>
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -110,7 +99,7 @@ export default function StudentLibraryPassPage() {
                   type="text"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="e.g. AI Neural Network thesis reading, Semester end exam prep..."
+                  placeholder="What will you study?"
                   required
                   className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium"
                 />
@@ -127,7 +116,6 @@ export default function StudentLibraryPassPage() {
                   required
                   className="w-full px-4 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 font-bold max-w-xs"
                 />
-                <p className="text-[11px] text-zinc-400">Library study sessions allow curfew extension up to 11:00 PM.</p>
               </div>
 
               <motion.button
@@ -135,7 +123,7 @@ export default function StudentLibraryPassPage() {
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 transition={springs.snappy}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white font-bold text-sm shadow-lg shadow-purple-600/25 transition-all flex items-center justify-center gap-2 mt-4"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 text-white font-bold text-sm shadow-lg shadow-purple-600/25 transition-all flex items-center justify-center gap-2 mt-4"
               >
                 <BookOpen className="w-4 h-4" /> Log Study Hours in Warden Register
               </motion.button>
@@ -145,7 +133,7 @@ export default function StudentLibraryPassPage() {
 
         {/* Right Column: Active Status */}
         <StaggerItem className="space-y-6">
-          <div className="glass-card p-6 rounded-3xl space-y-4 border border-purple-500/30 relative overflow-hidden bg-gradient-to-br from-purple-900/10 to-transparent">
+          <div className="glass-card p-6 rounded-3xl space-y-4 border border-purple-500/30 relative overflow-hidden bg-gradient-to-br from-teal-900/10 to-transparent">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
                 Library Status
@@ -170,7 +158,7 @@ export default function StudentLibraryPassPage() {
                         <span>Registered at Central Library</span>
                       </div>
                       <p className="text-xs leading-relaxed">
-                        You are currently logged at <strong className="font-bold">{activeLibraryLog?.destination || section}</strong>. Curfew extension active until {activeLibraryLog?.endTime || '10:30 PM'}.
+                        You are currently logged at <strong className="font-bold">{activeLibraryLog?.destination || section}</strong>. Expected return: {activeLibraryLog?.endTime || '—'}.
                       </p>
                     </div>
 
@@ -181,7 +169,7 @@ export default function StudentLibraryPassPage() {
                       transition={springs.snappy}
                       className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2"
                     >
-                      <CheckCircle2 className="w-5 h-5" /> Mark Returned to Room {currentUser.roomNumber || '304A'}
+                      <CheckCircle2 className="w-5 h-5" /> {currentUser.roomNumber ? `Mark Returned to Room ${currentUser.roomNumber}` : 'Mark Returned'}
                     </motion.button>
                   </motion.div>
                 ) : (
@@ -233,18 +221,18 @@ export default function StudentLibraryPassPage() {
                 animate="visible"
                 exit="exit"
                 layout
-                className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="p-4 rounded-2xl glass-control flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-zinc-900 dark:text-white">{item.destination || 'Central Library'}</span>
+                    <span className="font-bold text-sm text-zinc-900 dark:text-white">{item.destination || '—'}</span>
                     <StatusBadge status={item.status} size="sm" />
                   </div>
                   <p className="text-xs text-zinc-500 mt-0.5">{item.reason}</p>
                 </div>
                 <div className="text-left sm:text-right text-xs space-y-0.5">
                   <p className="font-bold text-zinc-800 dark:text-zinc-200">{item.startDate}</p>
-                  <p className="text-zinc-500">Departure: <strong className="font-semibold">{item.startTime || '18:30'}</strong> • Expected: <strong className="font-semibold">{item.endTime || '22:30'}</strong></p>
+                  <p className="text-zinc-500">Departure: <strong className="font-semibold">{item.startTime || '—'}</strong> • Expected: <strong className="font-semibold">{item.endTime || '—'}</strong></p>
                   {item.actualArrivalTime ? (
                     <p className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-end gap-1">
                       <CheckCircle2 className="w-3 h-3" /> Returned to Room: {item.actualArrivalTime}

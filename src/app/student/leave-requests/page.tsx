@@ -24,17 +24,19 @@ import { motion, AnimatePresence, springs, fadeUp, EASE_OUT, Reveal } from '@/li
 import { toast } from 'sonner';
 
 export default function LeaveRequestsPage() {
-  const { currentUser, studentLeaves, addLeaveRequest } = useChavaraStore();
+  const { currentUser, studentLeaves, addLeaveRequest, users } = useChavaraStore();
+  const warden = users.find((u) => u.role === 'warden');
+  const today = new Date().toISOString().split('T')[0];
 
   // Wizard state
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [type, setType] = useState<'general' | 'home' | 'outpass' | 'library' | 'class'>('general');
   const [reason, setReason] = useState('');
   const [destination, setDestination] = useState('');
-  const [startDate, setStartDate] = useState('2026-07-28');
-  const [endDate, setEndDate] = useState('2026-07-30');
-  const [startTime, setStartTime] = useState('14:00');
-  const [endTime, setEndTime] = useState('18:00');
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,8 +51,8 @@ export default function LeaveRequestsPage() {
       destination: destination || undefined,
       startDate,
       endDate: type === 'home' || type === 'general' ? endDate : undefined,
-      startTime: type === 'outpass' || type === 'library' ? startTime : undefined,
-      endTime: type === 'outpass' || type === 'library' ? endTime : undefined,
+      startTime: (type === 'outpass' || type === 'library') && startTime ? startTime : undefined,
+      endTime: (type === 'outpass' || type === 'library') && endTime ? endTime : undefined,
     });
 
     // Reset form & go back to step 1
@@ -188,8 +190,8 @@ export default function LeaveRequestsPage() {
                   {[
                     { id: 'general', title: 'General Campus Leave', desc: 'Day outing or personal errand' },
                     { id: 'home', title: 'Home Leave / Vacation', desc: 'Overnight journey to hometown' },
-                    { id: 'outpass', title: 'Local Outing Log', desc: 'City mall, hospital, shopping (4-6 hours)' },
-                    { id: 'library', title: 'Library Study Register', desc: 'Academic study after curfew (till 11 PM)' },
+                    { id: 'outpass', title: 'Local Outing Log', desc: 'Local errand, hospital, shopping' },
+                    { id: 'library', title: 'Library Study Register', desc: 'Academic study after curfew' },
                   ].map((cat) => (
                     <motion.div
                       key={cat.id}
@@ -251,7 +253,7 @@ export default function LeaveRequestsPage() {
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                      className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
 
@@ -262,7 +264,7 @@ export default function LeaveRequestsPage() {
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                        className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
                       />
                     </div>
                   )}
@@ -275,7 +277,7 @@ export default function LeaveRequestsPage() {
                           type="time"
                           value={startTime}
                           onChange={(e) => setStartTime(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                          className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -284,7 +286,7 @@ export default function LeaveRequestsPage() {
                           type="time"
                           value={endTime}
                           onChange={(e) => setEndTime(e.target.value)}
-                          className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                          className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
                         />
                       </div>
                     </>
@@ -334,8 +336,8 @@ export default function LeaveRequestsPage() {
                     type="text"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
-                    placeholder="e.g. Central Tech Library / Indiranagar Bangalore"
-                    className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                    placeholder="Where are you going?"
+                    className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
 
@@ -347,13 +349,13 @@ export default function LeaveRequestsPage() {
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Provide full explanation for warden review..."
                     required
-                    className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                    className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
 
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2 font-medium">
                   <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>Once submitted, Dr. Sr. Mary Thomas (Warden) will review your request in the live approval queue.</span>
+                  <span>Once submitted, {warden ? `${warden.name} (Warden)` : 'the warden'} will review your request in the live approval queue.</span>
                 </div>
 
                 <div className="flex justify-between pt-4">
@@ -372,7 +374,7 @@ export default function LeaveRequestsPage() {
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.97 }}
                     transition={springs.snappy}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-violet-600/30 transition-all flex items-center gap-2"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-teal-700 hover:from-violet-500 hover:to-teal-600 text-white font-bold text-xs shadow-lg shadow-violet-600/30 transition-all flex items-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     <span>Submit Application</span>

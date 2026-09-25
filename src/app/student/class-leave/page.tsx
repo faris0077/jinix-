@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useChavaraStore } from '@/lib/store';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { DataTable } from '@/components/ui/DataTable';
@@ -12,10 +12,12 @@ import { toast } from 'sonner';
 
 export default function ClassLeavePage() {
   const { currentUser, studentLeaves, addLeaveRequest } = useChavaraStore();
-  const [startDate, setStartDate] = useState('2026-07-26');
-  const [endDate, setEndDate] = useState('2026-07-27');
-  const [reason, setReason] = useState('Viral fever and migraine (Medical rest recommended by campus doctor)');
-  const [file, setFile] = useState<string | null>('Apollo_Medical_Certificate_Ananya.pdf');
+  const today = new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+  const [reason, setReason] = useState('');
+  const [file, setFile] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,8 +29,10 @@ export default function ClassLeavePage() {
       medicalCertName: file || undefined,
     });
     toast.success('Academic Class Leave logged!', {
-      description: 'Medical certificate attached for course coordinator verification.',
+      description: file ? 'Supporting document attached for verification.' : 'Your request has been submitted for review.',
     });
+    setReason('');
+    setFile(null);
   };
 
   const classLeaves = studentLeaves.filter((l) => l.type === 'class');
@@ -95,12 +99,23 @@ export default function ClassLeavePage() {
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Detailed Reason *</label>
-              <textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} required className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border text-sm font-medium" />
+              <textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Describe the reason for your absence" required className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border text-sm font-medium" />
             </div>
 
             {/* Drag and Drop File Upload Simulation */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Medical Certificate / Supporting Document</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                className="hidden"
+                onChange={(e) => {
+                  const picked = e.target.files?.[0];
+                  if (picked) setFile(picked.name);
+                  e.target.value = '';
+                }}
+              />
               <AnimatePresence mode="wait" initial={false}>
                 {file ? (
                   <motion.div
@@ -128,7 +143,7 @@ export default function ClassLeavePage() {
                 ) : (
                   <motion.div
                     key="cert-dropzone"
-                    onClick={() => setFile('Dr_John_Medical_Certificate_2026.pdf')}
+                    onClick={() => fileInputRef.current?.click()}
                     initial={{ opacity: 0, scale: 0.97, y: 8 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, transition: { duration: 0.25, ease: 'easeIn' } }}
@@ -161,7 +176,7 @@ export default function ClassLeavePage() {
             <span>Attendance Policy</span>
           </h3>
           <p className="text-xs text-zinc-500 leading-relaxed">
-            Minimum 75% attendance is mandatory across all course credits. Medical leave exceeding 3 consecutive days requires physical endorsement from the Chavara Health Center.
+            Attach a supporting document such as a medical certificate where applicable. Your request will be reviewed by the warden.
           </p>
         </StaggerItem>
       </Stagger>

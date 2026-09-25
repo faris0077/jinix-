@@ -21,7 +21,8 @@ import { motion, AnimatePresence, springs, listItem, Stagger, StaggerItem, Revea
 import { toast } from 'sonner';
 
 export default function StudentOutpassPage() {
-  const { currentUser, studentLeaves, addLeaveRequest, logStudentReturn } = useChavaraStore();
+  const { currentUser, studentLeaves, addLeaveRequest, logStudentReturn, users } = useChavaraStore();
+  const warden = users.find((u) => u.role === 'warden');
   const [destination, setDestination] = useState('');
   const [reason, setReason] = useState('');
   const [startTime, setStartTime] = useState('15:00');
@@ -71,12 +72,6 @@ export default function StudentOutpassPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 px-3 py-1.5 rounded-xl border border-violet-300/40 flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-violet-600" />
-            Curfew Timing: 08:30 PM
-          </span>
-        </div>
       </div>
 
       <Stagger className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -102,7 +97,7 @@ export default function StudentOutpassPage() {
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
-                  placeholder="e.g. Lulu Mall, MG Road, Apollo Dental Clinic..."
+                  placeholder="Where are you going?"
                   required
                   className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 font-medium"
                 />
@@ -116,7 +111,7 @@ export default function StudentOutpassPage() {
                   type="text"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="e.g. Buying reference books, medical checkup, group study..."
+                  placeholder="Why are you going?"
                   required
                   className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 font-medium"
                 />
@@ -143,7 +138,7 @@ export default function StudentOutpassPage() {
                     onChange={(e) => setNotifyGuardian(e.target.checked)}
                     className="rounded border-zinc-300 text-violet-600 focus:ring-violet-500 w-4 h-4"
                   />
-                  <span>Send automatic movement confirmation SMS to registered guardian ({currentUser.parentPhone || '+91 98765 43211'})</span>
+                  <span>Send automatic movement confirmation SMS to registered guardian ({currentUser.parentPhone || 'no number on file'})</span>
                 </label>
               </div>
 
@@ -152,7 +147,7 @@ export default function StudentOutpassPage() {
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 transition={springs.snappy}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-violet-600/25 transition-all flex items-center justify-center gap-2 mt-4"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-teal-700 hover:from-violet-500 hover:to-teal-600 text-white font-bold text-sm shadow-lg shadow-violet-600/25 transition-all flex items-center justify-center gap-2 mt-4"
               >
                 <Send className="w-4 h-4" /> Register Outing in Campus Log
               </motion.button>
@@ -162,7 +157,7 @@ export default function StudentOutpassPage() {
 
         {/* Right Column: Active Status & Action */}
         <StaggerItem className="space-y-6">
-          <div className="glass-card p-6 rounded-3xl space-y-4 border border-violet-500/30 relative overflow-hidden bg-gradient-to-br from-violet-900/10 via-purple-900/5 to-transparent">
+          <div className="glass-card p-6 rounded-3xl space-y-4 border border-violet-500/30 relative overflow-hidden bg-gradient-to-br from-violet-900/10 via-teal-900/5 to-transparent">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">
                 Current Location Status
@@ -187,7 +182,7 @@ export default function StudentOutpassPage() {
                         <span>Currently Logged Outside Campus</span>
                       </div>
                       <p className="text-xs leading-relaxed">
-                        Warden has signed off on your outing to <strong className="font-bold">{activeOutpass?.destination || 'City Center'}</strong>. Please ensure return before 08:30 PM curfew.
+                        Warden has signed off on your outing to <strong className="font-bold">{activeOutpass?.destination || 'your destination'}</strong>. Please mark your return once back on campus.
                       </p>
                     </div>
 
@@ -198,7 +193,7 @@ export default function StudentOutpassPage() {
                       transition={springs.snappy}
                       className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2"
                     >
-                      <CheckCircle2 className="w-5 h-5" /> Mark Returned to Room {currentUser.roomNumber || '304A'}
+                      <CheckCircle2 className="w-5 h-5" /> {currentUser.roomNumber ? `Mark Returned to Room ${currentUser.roomNumber}` : 'Mark Returned'}
                     </motion.button>
                   </motion.div>
                 ) : activeOutpass && activeOutpass.status === 'pending' ? (
@@ -213,7 +208,7 @@ export default function StudentOutpassPage() {
                     <Clock className="w-8 h-8 text-amber-500 mx-auto" />
                     <p className="font-bold text-sm">Warden Review Pending</p>
                     <p className="text-xs text-amber-700 dark:text-amber-300">
-                      Your request for {activeOutpass.destination} is currently being reviewed by Dr. Sr. Mary Thomas.
+                      Your request for {activeOutpass.destination} is currently being reviewed{warden ? ` by ${warden.name}` : ''}.
                     </p>
                   </motion.div>
                 ) : (
@@ -228,7 +223,7 @@ export default function StudentOutpassPage() {
                     <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
                     <p className="font-bold text-sm text-emerald-900 dark:text-emerald-200">Present Inside Campus</p>
                     <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                      You are checked into Room {currentUser.roomNumber || '304A'} (Block B). No active outings logged.
+                      {currentUser.roomNumber ? `You are checked into Room ${currentUser.roomNumber}${currentUser.block ? ` (Block ${currentUser.block})` : ''}.` : 'No room assigned yet.'} No active outings logged.
                     </p>
                   </motion.div>
                 )}
@@ -242,8 +237,8 @@ export default function StudentOutpassPage() {
               <AlertTriangle className="w-4 h-4 text-amber-500" /> Outing Regulations
             </h4>
             <ul className="list-disc pl-4 space-y-1">
-              <li>All local outings must be logged at least 30 minutes before departure.</li>
-              <li>Late arrivals beyond 08:30 PM will trigger an automated exception log on the Warden console.</li>
+              <li>All local outings must be logged before departure.</li>
+              <li>Late arrivals will be recorded as exceptions on the Warden console.</li>
               <li>For overnight stays out of station, please use the <strong>Home Leave</strong> module.</li>
             </ul>
           </div>
@@ -259,7 +254,7 @@ export default function StudentOutpassPage() {
 
         <div className="space-y-2 pt-1">
           {outpassHistory.length === 0 && (
-            <p className="text-xs text-zinc-500 italic py-4 text-center">No past outings logged in this semester.</p>
+            <p className="text-xs text-zinc-500 italic py-4 text-center">No past outings logged.</p>
           )}
           <AnimatePresence initial={false}>
             {outpassHistory.map((item) => (
@@ -270,18 +265,18 @@ export default function StudentOutpassPage() {
                 animate="visible"
                 exit="exit"
                 layout
-                className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="p-4 rounded-2xl glass-control flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-zinc-900 dark:text-white">{item.destination || 'City Center'}</span>
+                    <span className="font-bold text-sm text-zinc-900 dark:text-white">{item.destination || '—'}</span>
                     <StatusBadge status={item.status} size="sm" />
                   </div>
                   <p className="text-xs text-zinc-500 mt-0.5">{item.reason}</p>
                 </div>
                 <div className="text-left sm:text-right text-xs space-y-0.5">
                   <p className="font-bold text-zinc-800 dark:text-zinc-200">{item.startDate}</p>
-                  <p className="text-zinc-500">Departure: <strong className="font-semibold">{item.startTime || '14:00'}</strong></p>
+                  <p className="text-zinc-500">Departure: <strong className="font-semibold">{item.startTime || '—'}</strong></p>
                   {item.actualArrivalTime ? (
                     <p className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-end gap-1">
                       <CheckCircle2 className="w-3 h-3" /> Arrived at Gate: {item.actualArrivalTime}

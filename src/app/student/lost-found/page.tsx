@@ -204,7 +204,7 @@ export default function LostFoundPage() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 8 }}
             transition={{ duration: 0.4, ease: EASE_OUT }}
-            className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 w-full max-w-lg rounded-3xl shadow-2xl p-6 sm:p-8 relative"
+            className="glass-strong w-full max-w-lg rounded-3xl shadow-2xl p-6 sm:p-8 relative"
           >
             <h2 className="text-2xl font-extrabold text-zinc-900 dark:text-white mb-6">Report Item</h2>
             
@@ -228,7 +228,7 @@ export default function LostFoundPage() {
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., Blue Hydroflask Water Bottle"
+                  placeholder="Item name"
                   className="w-full px-4 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border-none focus:ring-2 focus:ring-violet-600"
                 />
               </div>

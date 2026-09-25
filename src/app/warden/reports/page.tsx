@@ -2,35 +2,34 @@
 
 import React from 'react';
 import { useChavaraStore } from '@/lib/store';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { motion, springs, hoverLift, Stagger, StaggerItem, Reveal, AnimatedNumber } from '@/lib/motion';
 import { FileText, Download, TrendingUp, Users, AlertTriangle, IndianRupee } from 'lucide-react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   BarChart, Bar,
   PieChart, Pie, Cell
 } from 'recharts';
 
-const attendanceData = [
-  { name: 'Mon', Present: 290, OnLeave: 10 },
-  { name: 'Tue', Present: 295, OnLeave: 5 },
-  { name: 'Wed', Present: 292, OnLeave: 8 },
-  { name: 'Thu', Present: 288, OnLeave: 12 },
-  { name: 'Fri', Present: 275, OnLeave: 25 },
-  { name: 'Sat', Present: 250, OnLeave: 50 },
-  { name: 'Sun', Present: 260, OnLeave: 40 },
-];
+const COLORS = ['#0d9488', '#2563eb', '#d97706'];
 
-const messData = [
-  { name: 'Vegetarian', value: 150 },
-  { name: 'Non-Vegetarian', value: 100 },
-  { name: 'Eggitarian', value: 50 },
-];
-const COLORS = ['#8d7cc9', '#1c9a89', '#b3812c'];
+const DIETARY_LABELS: Record<string, string> = { veg: 'Vegetarian', 'non-veg': 'Non-Vegetarian', vegan: 'Vegan' };
 
 export default function WardenReportsPage() {
-  const { leaveRequests, complaints, feePayments, users } = useChavaraStore();
+  const { leaveRequests, complaints, feePayments, users, foodOrders } = useChavaraStore();
   
-  const totalStudents = users.filter((u) => u.role === 'student').length;
+  const students = users.filter((u) => u.role === 'student');
+  const totalStudents = students.length;
+  const attendanceData = [
+    { name: 'Present', key: 'present' },
+    { name: 'On Leave', key: 'on-leave' },
+    { name: 'Outpass', key: 'outpass' },
+    { name: 'Library', key: 'library' },
+  ].map(({ name, key }) => ({ name, Residents: students.filter((u) => u.attendanceToday === key).length }));
+  const hasAttendance = attendanceData.some((d) => d.Residents > 0);
+  const messData = Object.entries(DIETARY_LABELS)
+    .map(([key, name]) => ({ name, value: foodOrders.filter((f) => f.dietary === key).length }))
+    .filter((d) => d.value > 0);
   const activeComplaints = complaints.filter((c) => c.status !== 'resolved').length;
   const pendingLeaves = leaveRequests.filter((l) => l.status === 'pending').length;
   const totalFeesPaid = feePayments
@@ -58,11 +57,13 @@ export default function WardenReportsPage() {
     
     return {
       block: `Block ${block}`,
-      Paid: blockFees.filter((f) => f.status === 'paid').reduce((acc, curr) => acc + curr.amount, 0) || Math.floor(Math.random() * 50000 + 10000), // Fallback if no mock data
-      Pending: blockFees.filter((f) => f.status === 'pending').reduce((acc, curr) => acc + curr.amount, 0) || Math.floor(Math.random() * 20000),
-      Overdue: blockFees.filter((f) => f.status === 'overdue').reduce((acc, curr) => acc + curr.amount, 0) || Math.floor(Math.random() * 10000),
+      Paid: blockFees.filter((f) => f.status === 'paid').reduce((acc, curr) => acc + curr.amount, 0),
+      Pending: blockFees.filter((f) => f.status === 'pending').reduce((acc, curr) => acc + curr.amount, 0),
+      Overdue: blockFees.filter((f) => f.status === 'overdue').reduce((acc, curr) => acc + curr.amount, 0),
     };
   });
+
+  const hasFinancial = financialData.some((d) => d.Paid + d.Pending + d.Overdue > 0);
 
   return (
     <div className="space-y-8">
@@ -118,23 +119,25 @@ export default function WardenReportsPage() {
         <div className="glass-card p-6 rounded-3xl">
           <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-violet-500" />
-            7-Day Attendance Trend
+            Resident Attendance Today
           </h2>
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={attendanceData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#8a8799" strokeOpacity={0.18} vertical={false} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8a8799' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8a8799' }} />
-                <RechartsTooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  cursor={{ stroke: '#8a8799', strokeWidth: 1, strokeOpacity: 0.3 }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
-                <Line type="monotone" dataKey="Present" stroke="#8d7cc9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="OnLeave" name="On Leave" stroke="#b3812c" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            {!hasAttendance ? (
+              <EmptyState />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={attendanceData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.18} vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} allowDecimals={false} />
+                  <RechartsTooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    cursor={{ fill: '#94a3b8', opacity: 0.08 }}
+                  />
+                  <Bar dataKey="Residents" fill="#0d9488" radius={[6, 6, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
         </Reveal>
@@ -144,32 +147,36 @@ export default function WardenReportsPage() {
         <div className="glass-card p-6 rounded-3xl">
           <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
             <Users className="w-5 h-5 text-emerald-500" />
-            Dietary Preferences
+            Meal Menu by Dietary Type
           </h2>
           <div className="h-72 w-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={messData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {messData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ fontWeight: 'bold' }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
-              </PieChart>
-            </ResponsiveContainer>
+            {messData.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={messData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {messData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ fontWeight: 'bold' }}
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
         </Reveal>
@@ -182,22 +189,26 @@ export default function WardenReportsPage() {
             Fee Collection Status by Block
           </h2>
           <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={financialData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#8a8799" strokeOpacity={0.18} vertical={false} />
-                <XAxis dataKey="block" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8a8799' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8a8799' }} tickFormatter={(val) => `₹${val/1000}k`} />
-                <RechartsTooltip 
-                  cursor={{ fill: '#8a8799', opacity: 0.08 }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value) => [`₹${(value ?? 0).toLocaleString()}`, undefined]}
-                />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
-                <Bar dataKey="Paid" stackId="a" fill="#2c7d52" radius={[0, 0, 4, 4]} barSize={40} />
-                <Bar dataKey="Pending" stackId="a" fill="#b3812c" />
-                <Bar dataKey="Overdue" stackId="a" fill="#ad4954" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {!hasFinancial ? (
+              <EmptyState />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={financialData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.18} vertical={false} />
+                  <XAxis dataKey="block" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(val) => `₹${val/1000}k`} />
+                  <RechartsTooltip
+                    cursor={{ fill: '#94a3b8', opacity: 0.08 }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    formatter={(value) => [`₹${(value ?? 0).toLocaleString()}`, undefined]}
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
+                  <Bar dataKey="Paid" stackId="a" fill="#0d9488" radius={[0, 0, 4, 4]} barSize={40} />
+                  <Bar dataKey="Pending" stackId="a" fill="#d97706" />
+                  <Bar dataKey="Overdue" stackId="a" fill="#e11d48" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
         </Reveal>

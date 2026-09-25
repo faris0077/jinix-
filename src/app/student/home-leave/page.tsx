@@ -14,12 +14,13 @@ import { toast } from 'sonner';
 export default function HomeLeavePage() {
   const { currentUser, studentLeaves, addLeaveRequest } = useChavaraStore();
   
-  const [startDate, setStartDate] = useState('2026-07-31');
-  const [endDate, setEndDate] = useState('2026-08-03');
-  const [startTime, setStartTime] = useState('16:00');
-  const [endTime, setEndTime] = useState('18:00');
-  const [reason, setReason] = useState('Attending family religious function and weekend visit');
-  const [destination, setDestination] = useState('Indiranagar, Bangalore');
+  const today = new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [reason, setReason] = useState('');
+  const [destination, setDestination] = useState('');
   const [foodReq, setFoodReq] = useState({
     breakfast: true,
     lunch: false,
@@ -40,12 +41,12 @@ export default function HomeLeavePage() {
       destination,
       startDate,
       endDate,
-      startTime,
-      endTime,
+      startTime: startTime || undefined,
+      endTime: endTime || undefined,
       foodRequirements: foodReq,
     });
 
-    toast.success('Home Leave application submitted! 🏡', {
+    toast.success('Home Leave application submitted!', {
       description: 'Your food requirement deduction has been logged in the kitchen tally.',
     });
   };
@@ -63,7 +64,7 @@ export default function HomeLeavePage() {
       header: 'Hometown / Destination',
       cell: ({ row }) => (
         <div>
-          <p className="font-bold text-sm text-zinc-900 dark:text-white">{row.original.destination || 'Hometown'}</p>
+          <p className="font-bold text-sm text-zinc-900 dark:text-white">{row.original.destination || '—'}</p>
           <p className="text-xs text-zinc-500 truncate">{row.original.reason}</p>
         </div>
       ),
@@ -142,7 +143,7 @@ export default function HomeLeavePage() {
               <span>New Home Leave Application</span>
             </h2>
             <span className="text-xs font-bold text-violet-600 bg-violet-50 dark:bg-violet-950/60 px-2.5 py-1 rounded-md">
-              Room {currentUser.roomNumber} ({currentUser.block})
+              {currentUser.roomNumber ? `Room ${currentUser.roomNumber}${currentUser.block ? ` (Block ${currentUser.block})` : ''}` : 'No room assigned'}
             </span>
           </div>
 
@@ -154,7 +155,7 @@ export default function HomeLeavePage() {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                  className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
                 />
               </div>
 
@@ -164,7 +165,7 @@ export default function HomeLeavePage() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                  className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
                 />
               </div>
 
@@ -174,7 +175,7 @@ export default function HomeLeavePage() {
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                  className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
                 />
               </div>
 
@@ -184,7 +185,7 @@ export default function HomeLeavePage() {
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                  className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
                 />
               </div>
             </div>
@@ -195,9 +196,9 @@ export default function HomeLeavePage() {
                 type="text"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                placeholder="e.g. Indiranagar, Bangalore / Trivandrum Kerala"
+                placeholder="Town / city and address"
                 required
-                className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
               />
             </div>
 
@@ -209,7 +210,7 @@ export default function HomeLeavePage() {
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Provide details..."
                 required
-                className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                className="w-full p-3 rounded-xl glass-control text-sm font-medium focus:ring-2 focus:ring-violet-500"
               />
             </div>
 
@@ -252,7 +253,7 @@ export default function HomeLeavePage() {
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={springs.snappy}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-teal-700 hover:from-violet-500 hover:to-teal-600 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-all flex items-center justify-center gap-2"
             >
               <Send className="w-4 h-4" />
               <span>Submit Home Leave Application</span>
@@ -262,13 +263,13 @@ export default function HomeLeavePage() {
 
         {/* Side Info Widget */}
         <StaggerItem className="space-y-6">
-          <div className="glass-card p-6 rounded-3xl space-y-4 bg-gradient-to-br from-violet-950/40 to-zinc-900/40 border-violet-500/20">
+          <div className="glass-card p-6 rounded-3xl space-y-4 bg-gradient-to-br from-teal-50 to-white dark:from-teal-950/40 dark:to-zinc-900/40 border-teal-500/20">
             <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-400" />
               <span>Warden Guidelines</span>
             </h3>
             <ul className="space-y-2.5 text-xs text-zinc-600 dark:text-zinc-400 list-disc pl-4">
-              <li>Home leave requires minimum 24-hour advance submission.</li>
+              <li>Submit home leave applications in advance for warden review.</li>
               <li>SMS confirmation will be automatically dispatched to primary parent mobile number upon warden approval.</li>
               <li>Unchecked meals will be deducted from your quarterly mess bill automatically.</li>
             </ul>

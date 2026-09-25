@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useChavaraStore } from '@/lib/store';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import {
   Building2,
@@ -10,11 +11,9 @@ import {
   Users,
   TrendingUp,
   Award,
-  ShieldCheck,
   Sparkles,
   ArrowRight,
   Download,
-  CheckCircle2,
   PieChart as PieIcon,
   BarChart3,
   Calendar,
@@ -57,25 +56,20 @@ import {
   EASE_OUT,
 } from '@/lib/motion';
 
-const ANNUAL_REVENUE_DATA = [
-  { month: 'Jan', income: 42000, expense: 28000, budget: 35000 },
-  { month: 'Feb', income: 45000, expense: 29000, budget: 35000 },
-  { month: 'Mar', income: 68000, expense: 31000, budget: 35000 }, // Spring Fee collection
-  { month: 'Apr', income: 41000, expense: 27000, budget: 35000 },
-  { month: 'May', income: 38000, expense: 25000, budget: 35000 },
-  { month: 'Jun', income: 52000, expense: 32000, budget: 35000 },
-  { month: 'Jul', income: 95000, expense: 35000, budget: 35000 }, // Monsoon Semester Intake
-];
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const BLOCKS = [
+  { id: 'A', name: 'Block A', color: '#0d9488' },
+  { id: 'B', name: 'Block B', color: '#2563eb' },
+  { id: 'C', name: 'Block C', color: '#d97706' },
+  { id: 'D', name: 'Block D', color: '#8b5cf6' },
+] as const;
 
-const BLOCK_OCCUPANCY_DATA = [
-  { name: 'Block A (St. Alphonsa Wing)', occupied: 450, capacity: 450, color: '#8d7cc9', warden: 'Sr. Anitha Philip' },
-  { name: 'Block B (St. Teresa Wing)', occupied: 445, capacity: 450, color: '#1c9a89', warden: 'Dr. Sr. Mary Thomas' },
-  { name: 'Block C (St. Euphrasia Wing)', occupied: 480, capacity: 500, color: '#b3812c', warden: 'Dr. Elizabeth Varghese' },
-  { name: 'Block D (Mother Carmel Wing)', occupied: 440, capacity: 450, color: '#4f80b8', warden: 'Sr. Rose Mary' },
-];
+const pct = (part: number, whole: number) => (whole > 0 ? (part / whole) * 100 : 0);
+
+const EmptyChart = () => <EmptyState />;
 
 export default function DirectorDashboard() {
-  const { currentUser, externalDeliveries, complaints, leaveRequests, addNotice } = useChavaraStore();
+  const { currentUser, externalDeliveries, complaints, leaveRequests, addNotice, users, rooms, feePayments } = useChavaraStore();
 
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
   const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -87,15 +81,46 @@ export default function DirectorDashboard() {
   const highPriorityComplaints = complaints.filter(c => c.status === 'submitted' || c.status === 'in-progress').slice(0, 3);
   const pendingLeaves = leaveRequests.filter(l => l.status === 'pending').slice(0, 3);
 
-  const totalCapacity = BLOCK_OCCUPANCY_DATA.reduce((acc, b) => acc + b.capacity, 0);
-  const totalOccupied = BLOCK_OCCUPANCY_DATA.reduce((acc, b) => acc + b.occupied, 0);
-  const occupancyRate = ((totalOccupied / totalCapacity) * 100).toFixed(1);
+  const blockData = BLOCKS.map((b) => {
+    const blockRooms = rooms.filter((r) => r.block === b.id);
+    const capacity = blockRooms.reduce((acc, r) => acc + r.capacity, 0);
+    const occupied = blockRooms.reduce((acc, r) => acc + r.occupied, 0);
+    const openComplaints = complaints.filter(
+      (c) => c.status !== 'resolved' && blockRooms.some((r) => r.roomNumber === c.roomNumber)
+    ).length;
+    return { ...b, capacity, occupied, openComplaints };
+  });
+  const totalCapacity = blockData.reduce((acc, b) => acc + b.capacity, 0);
+  const totalOccupied = blockData.reduce((acc, b) => acc + b.occupied, 0);
+  const occupancyRate = pct(totalOccupied, totalCapacity).toFixed(1);
+  const hasOccupancy = totalOccupied > 0;
+  const activeScholars = users.filter((u) => u.role === 'student').length;
+  const openComplaintCount = complaints.filter((c) => c.status !== 'resolved').length;
+  const pendingLeaveCount = leaveRequests.filter((l) => l.status === 'pending').length;
+
+  const paidPayments = feePayments.filter((p) => p.status === 'paid');
+  const totalRevenue = paidPayments.reduce((acc, p) => acc + p.amount, 0);
+  const revenueByMonth = new Map<string, number>();
+  paidPayments.forEach((p) => {
+    const d = p.paidOn ? new Date(p.paidOn) : null;
+    if (!d || isNaN(d.getTime())) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`;
+    revenueByMonth.set(key, (revenueByMonth.get(key) || 0) + p.amount);
+  });
+  const revenueData = Array.from(revenueByMonth.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, income]) => ({ month: MONTH_LABELS[parseInt(key.split('-')[1], 10)], income }));
+  const selectedBlockData = blockData.find((b) => b.name === selectedBlock);
   const totalDeliveries = externalDeliveries.length;
   const activeDeliveries = externalDeliveries.filter((d) => d.status === 'en-route' || d.status === 'arrived-gate').length;
+  const collectedDeliveries = externalDeliveries.filter((d) => d.status === 'collected').length;
+  const platformCounts = new Map<string, number>();
+  externalDeliveries.forEach((d) => platformCounts.set(d.platform, (platformCounts.get(d.platform) || 0) + 1));
+  const topPlatform = Array.from(platformCounts.entries()).sort((a, b) => b[1] - a[1])[0];
 
   const handleExportBriefing = () => {
     toast.success('Executive Board Briefing Exported!', {
-      description: 'Chavara Residence OS Quarterly Financial & Security Dossier saved as PDF.',
+      description: 'Board briefing export requested.',
     });
   };
 
@@ -119,7 +144,7 @@ export default function DirectorDashboard() {
     <div className="space-y-8">
       {/* Executive Hero Banner */}
       <TiltCard max={4}>
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-zinc-950 via-violet-950 to-indigo-950 p-8 text-white shadow-2xl border border-violet-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 hero-surface p-8 text-white shadow-2xl border border-violet-500/30">
         <div className="absolute -right-20 -top-20 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
         <div className="absolute left-1/3 -bottom-20 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
 
@@ -133,7 +158,7 @@ export default function DirectorDashboard() {
               Director Executive Dashboard 👑
             </h1>
             <p className="text-sm text-zinc-300 max-w-2xl leading-relaxed">
-              Welcome, <strong className="text-white">{currentUser.name}</strong>. Institutional occupancy across all 4 residence blocks is standing at an exceptional <strong className="text-emerald-400 font-bold">{occupancyRate}% ({totalOccupied} female scholars)</strong>.
+              Welcome, <strong className="text-white">{currentUser.name}</strong>. Institutional occupancy across all 4 residence blocks is standing at <strong className="text-emerald-400 font-bold">{occupancyRate}% ({totalOccupied} of {totalCapacity} beds)</strong>.
             </p>
           </div>
 
@@ -153,7 +178,7 @@ export default function DirectorDashboard() {
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={springs.snappy}
-              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 text-white font-bold text-sm shadow-xl shadow-violet-600/30 transition-colors flex items-center gap-2"
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-teal-700 hover:from-violet-500 text-white font-bold text-sm shadow-xl shadow-violet-600/30 transition-colors flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export Board Report PDF</span>
@@ -182,7 +207,7 @@ export default function DirectorDashboard() {
                     animate="visible"
                     exit="exit"
                     layout
-                    className="flex justify-between items-center p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+                    className="flex justify-between items-center p-3 rounded-xl glass-control"
                   >
                     <div>
                       <p className="text-sm font-semibold text-zinc-900 dark:text-white">{c.title}</p>
@@ -201,7 +226,7 @@ export default function DirectorDashboard() {
           <div className="glass-card p-6 rounded-3xl space-y-4 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent">
             <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
               <Clock className="w-5 h-5 text-amber-500" />
-              <span>Pending Warden Approvals (&gt;24h)</span>
+              <span>Pending Warden Approvals</span>
             </h3>
             <div className="space-y-3">
               <AnimatePresence initial={false}>
@@ -213,7 +238,7 @@ export default function DirectorDashboard() {
                     animate="visible"
                     exit="exit"
                     layout
-                    className="flex justify-between items-center p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+                    className="flex justify-between items-center p-3 rounded-xl glass-control"
                   >
                     <div>
                       <p className="text-sm font-semibold text-zinc-900 dark:text-white">{l.studentName}</p>
@@ -235,20 +260,20 @@ export default function DirectorDashboard() {
       <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StaggerItem className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-emerald-500/20">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Annual Revenue (2026)</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Fee Revenue Collected</span>
             <DollarSign className="w-5 h-5 text-emerald-500" />
           </div>
           <div className="flex items-baseline justify-between">
             <AnimatedNumber
-              value={480500}
+              value={totalRevenue}
               format={(v) => `$${Math.round(v).toLocaleString()}`}
               className="text-3xl font-extrabold text-zinc-900 dark:text-white"
             />
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
-              +14.2% YoY
+              {paidPayments.length} Paid
             </span>
           </div>
-          <p className="text-xs text-zinc-500">Monsoon semester collections active</p>
+          <p className="text-xs text-zinc-500">Total of all paid fee payments</p>
         </StaggerItem>
 
         <StaggerItem className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-violet-500/20">
@@ -266,25 +291,25 @@ export default function DirectorDashboard() {
               {totalOccupied} Beds
             </span>
           </div>
-          <p className="text-xs text-zinc-500">Across 4 luxury accommodation blocks</p>
+          <p className="text-xs text-zinc-500">{totalCapacity} beds across {rooms.length} rooms</p>
         </StaggerItem>
 
         <StaggerItem className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-purple-500/20">
           <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Security & Audit Index</span>
-            <ShieldCheck className="w-5 h-5 text-purple-500" />
+            <span className="text-xs font-bold uppercase tracking-wider">Open Complaints</span>
+            <AlertTriangle className="w-5 h-5 text-purple-500" />
           </div>
           <div className="flex items-baseline justify-between">
             <AnimatedNumber
-              value={99.8}
-              format={(v) => v.toFixed(1) + '%'}
+              value={openComplaintCount}
+              format={(v) => Math.round(v).toLocaleString()}
               className="text-3xl font-extrabold text-zinc-900 dark:text-white"
             />
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
-              Zero Breaches
+              {pendingLeaveCount} Pending Leaves
             </span>
           </div>
-          <p className="text-xs text-zinc-500">Biometric turnstile and location log compliance</p>
+          <p className="text-xs text-zinc-500">Unresolved maintenance and helpdesk tickets</p>
         </StaggerItem>
 
         <StaggerItem className="glass-card p-6 rounded-3xl space-y-3 relative overflow-hidden group border-blue-500/20">
@@ -294,15 +319,15 @@ export default function DirectorDashboard() {
           </div>
           <div className="flex items-baseline justify-between">
             <AnimatedNumber
-              value={1815}
+              value={activeScholars}
               format={(v) => Math.round(v).toLocaleString()}
               className="text-3xl font-extrabold text-zinc-900 dark:text-white"
             />
             <span className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
-              4 Wings
+              {users.length} Accounts
             </span>
           </div>
-          <p className="text-xs text-zinc-500">B.Tech, MBA, Architecture & Science</p>
+          <p className="text-xs text-zinc-500">Registered student accounts</p>
         </StaggerItem>
       </Stagger>
 
@@ -314,42 +339,33 @@ export default function DirectorDashboard() {
             <div>
               <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-violet-600" />
-                <span>Financial Trajectory: Fee Collections vs Operational Expenditures</span>
+                <span>Fee Collections by Month</span>
               </h3>
-              <p className="text-xs text-zinc-500">Monthly breakdown of student accommodation invoices vs mess food and utility overheads</p>
+              <p className="text-xs text-zinc-500">Paid fee payments grouped by the month they were paid</p>
             </div>
-            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-200">
-              Net Surplus Active
-            </span>
           </div>
 
           <div className="h-72 w-full pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={ANNUAL_REVENUE_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="incColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2c7d52" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#2c7d52" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="expColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#c05c7c" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#c05c7c" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="budgetColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f80b8" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#4f80b8" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.15)" vertical={false} />
-                <XAxis dataKey="month" stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val/1000}k`} />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(28, 27, 34, 0.95)', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }} formatter={(val: any) => [`$${Number(val || 0).toLocaleString()}`, '']} />
-                <Legend verticalAlign="top" height={36} />
-                <Area type="monotone" name="Fee Revenue ($)" dataKey="income" stroke="#2c7d52" strokeWidth={3} fillOpacity={1} fill="url(#incColor)" />
-                <Area type="monotone" name="Operational Expenses ($)" dataKey="expense" stroke="#c05c7c" strokeWidth={2} strokeDasharray="1 4" strokeLinecap="round" fillOpacity={1} fill="url(#expColor)" />
-                <Area type="monotone" name="Budget Allocation ($)" dataKey="budget" stroke="#4f80b8" strokeWidth={2} strokeDasharray="5 5" fillOpacity={1} fill="url(#budgetColor)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {revenueData.length === 0 ? (
+              <EmptyChart />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="incColor" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0d9488" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#0d9488" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.15)" vertical={false} />
+                  <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${Math.round(val / 100) / 10}k`} />
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }} formatter={(val: any) => [`$${Number(val || 0).toLocaleString()}`, '']} />
+                  <Legend verticalAlign="top" height={36} />
+                  <Area type="monotone" name="Fee Revenue ($)" dataKey="income" stroke="#0d9488" strokeWidth={3} fillOpacity={1} fill="url(#incColor)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -364,26 +380,30 @@ export default function DirectorDashboard() {
           </div>
 
           <div className="h-48 w-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={BLOCK_OCCUPANCY_DATA} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="occupied">
-                  {BLOCK_OCCUPANCY_DATA.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(28, 27, 34, 0.95)', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '11px' }} formatter={(val: any) => [`${val || 0} Beds Occupied`, '']} />
-              </PieChart>
-            </ResponsiveContainer>
+            {!hasOccupancy ? (
+              <EmptyChart />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={blockData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="occupied" nameKey="name">
+                    {blockData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '11px' }} formatter={(val: any) => [`${val || 0} Beds Occupied`, '']} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           <div className="space-y-2 text-xs">
-            {BLOCK_OCCUPANCY_DATA.map((b) => (
+            {blockData.map((b) => (
               <div key={b.name} className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 truncate font-semibold text-zinc-700 dark:text-zinc-300">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: b.color }} />
-                  {b.name.split(' ')[0]} ({b.name.split('(')[1]?.replace(')', '')})
+                  {b.name}
                 </span>
-                <span className="font-mono font-bold text-zinc-900 dark:text-white">{((b.occupied/b.capacity)*100).toFixed(0)}%</span>
+                <span className="font-mono font-bold text-zinc-900 dark:text-white">{pct(b.occupied, b.capacity).toFixed(0)}%</span>
               </div>
             ))}
           </div>
@@ -402,12 +422,12 @@ export default function DirectorDashboard() {
             <p className="text-xs text-zinc-500">Executive supervision of online food couriers and security turnstile traffic</p>
           </div>
           <span className="text-xs font-bold bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 px-3 py-1 rounded-full">
-            {totalDeliveries} Total Registered Orders Today
+            {totalDeliveries} Total Registered Deliveries
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-          <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+          <div className="p-4 rounded-2xl glass-control space-y-1">
             <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Active Gate Deliveries</span>
             <div className="flex items-baseline justify-between">
               <AnimatedNumber value={activeDeliveries} className="text-2xl font-extrabold text-orange-500" />
@@ -416,26 +436,28 @@ export default function DirectorDashboard() {
             <p className="text-[11px] text-zinc-400">Main turnstile turnspit clearance</p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+          <div className="p-4 rounded-2xl glass-control space-y-1">
             <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Top Order Platforms</span>
             <div className="flex items-baseline justify-between">
-              <span className="text-lg font-extrabold text-zinc-900 dark:text-white">Swiggy / Zomato</span>
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded">92% Volume</span>
+              <span className="text-lg font-extrabold text-zinc-900 dark:text-white">{topPlatform ? topPlatform[0] : '—'}</span>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded">
+                {topPlatform ? `${pct(topPlatform[1], totalDeliveries).toFixed(0)}% Volume` : 'No orders'}
+              </span>
             </div>
-            <p className="text-[11px] text-zinc-400">Instamart & Zepto grocery share: 8%</p>
+            <p className="text-[11px] text-zinc-400">Most frequent platform across registered deliveries</p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
-            <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Post-Curfew Compliance</span>
+          <div className="p-4 rounded-2xl glass-control space-y-1">
+            <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Collected Deliveries</span>
             <div className="flex items-baseline justify-between">
               <AnimatedNumber
-                value={100}
-                format={(v) => `${Math.round(v)}%`}
+                value={collectedDeliveries}
+                format={(v) => Math.round(v).toLocaleString()}
                 className="text-2xl font-extrabold text-emerald-500"
               />
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded">Zero Unauthorized</span>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded">of {totalDeliveries}</span>
             </div>
-            <p className="text-[11px] text-zinc-400">All late couriers cleared by Wardens</p>
+            <p className="text-[11px] text-zinc-400">Deliveries handed over to students</p>
           </div>
         </div>
       </div>
@@ -447,7 +469,7 @@ export default function DirectorDashboard() {
         <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
             <Briefcase className="w-5 h-5 text-violet-600" />
-            <span>Chief Wardens & Block Supervisory Dossier</span>
+            <span>Block Supervisory Dossier</span>
           </h3>
           <Link href="/director/reports" className="text-xs font-bold text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-1">
             Institutional audit center <ArrowRight className="w-3.5 h-3.5" />
@@ -455,30 +477,29 @@ export default function DirectorDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
-          {BLOCK_OCCUPANCY_DATA.map((block) => (
+          {blockData.map((block) => (
             <motion.div
               key={block.name}
               onClick={() => setSelectedBlock(block.name)}
               {...hoverLift}
-              className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-sm hover:border-violet-500 hover:shadow-violet-500/20 transition-[border-color,box-shadow] cursor-pointer group"
+              className="p-4 rounded-2xl glass-control space-y-3 shadow-sm hover:border-violet-500 hover:shadow-violet-500/20 transition-[border-color,box-shadow] cursor-pointer group"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-extrabold text-violet-600 dark:text-violet-400 uppercase tracking-wider bg-violet-50 dark:bg-violet-950/60 px-2 py-0.5 rounded">
-                  {block.name.split(' ')[0]}
+                  {block.name}
                 </span>
                 <span className="text-xs font-bold text-emerald-600">
-                  {((block.occupied / block.capacity) * 100).toFixed(0)}% Full
+                  {pct(block.occupied, block.capacity).toFixed(0)}% Full
                 </span>
               </div>
 
               <div>
-                <h4 className="font-bold text-sm text-zinc-900 dark:text-white truncate">{block.name.split('(')[1]?.replace(')', '')}</h4>
-                <p className="text-xs text-zinc-500 mt-0.5">Chief Warden: <strong>{block.warden}</strong></p>
+                <h4 className="font-bold text-sm text-zinc-900 dark:text-white truncate">{block.occupied} / {block.capacity} Beds</h4>
+                <p className="text-xs text-zinc-500 mt-0.5">{block.openComplaints} open complaint{block.openComplaints === 1 ? '' : 's'}</p>
               </div>
 
               <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-400 font-medium">
-                <span>{block.occupied} / {block.capacity} Beds</span>
-                <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Audited</span>
+                <span>{rooms.filter((r) => r.block === block.id).length} Rooms</span>
               </div>
             </motion.div>
           ))}
@@ -589,22 +610,22 @@ export default function DirectorDashboard() {
                 <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50">
                   <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">Occupancy</span>
                   <span className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-300">
-                    {BLOCK_OCCUPANCY_DATA.find(b => b.name === selectedBlock)?.occupied} <span className="text-sm font-medium text-emerald-600/70">/ {BLOCK_OCCUPANCY_DATA.find(b => b.name === selectedBlock)?.capacity}</span>
+                    {selectedBlockData?.occupied ?? 0} <span className="text-sm font-medium text-emerald-600/70">/ {selectedBlockData?.capacity ?? 0}</span>
                   </span>
                 </div>
                 <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50">
-                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block mb-1">Pending Complaints</span>
+                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block mb-1">Open Complaints</span>
                   <span className="text-2xl font-extrabold text-amber-700 dark:text-amber-300">
-                    {complaints.filter(c => c.status === 'submitted' && selectedBlock.includes(c.roomNumber.charAt(0)) || true).length || '0'} {/* Just mock matching logic */}
+                    {selectedBlockData?.openComplaints ?? 0}
                   </span>
                 </div>
               </div>
               <div>
                 <h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-3 flex items-center gap-2"><Briefcase className="w-4 h-4 text-violet-600" /> Operational Status</h4>
                 <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-                  <p className="flex justify-between"><span>Chief Warden:</span> <strong className="text-zinc-900 dark:text-white">{BLOCK_OCCUPANCY_DATA.find(b => b.name === selectedBlock)?.warden}</strong></p>
-                  <p className="flex justify-between"><span>Last Security Audit:</span> <strong className="text-zinc-900 dark:text-white">Today, 08:00 AM</strong></p>
-                  <p className="flex justify-between"><span>Infrastructure Health:</span> <span className="text-emerald-500 font-bold">Optimal</span></p>
+                  <p className="flex justify-between"><span>Rooms:</span> <strong className="text-zinc-900 dark:text-white">{rooms.filter((r) => r.block === selectedBlockData?.id).length}</strong></p>
+                  <p className="flex justify-between"><span>Rooms Under Maintenance:</span> <strong className="text-zinc-900 dark:text-white">{rooms.filter((r) => r.block === selectedBlockData?.id && r.status === 'maintenance').length}</strong></p>
+                  <p className="flex justify-between"><span>Occupancy:</span> <strong className="text-zinc-900 dark:text-white">{pct(selectedBlockData?.occupied ?? 0, selectedBlockData?.capacity ?? 0).toFixed(0)}%</strong></p>
                 </div>
               </div>
             </div>

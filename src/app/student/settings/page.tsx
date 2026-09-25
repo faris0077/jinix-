@@ -89,7 +89,7 @@ export default function StudentSettingsPage() {
                   Parent SMS Notification for Outing Departure & Return
                 </label>
                 <p className="text-xs text-zinc-500">
-                  Automatically send SMS check-in/check-out confirmation to primary guardian ({currentUser.parentPhone || '+91 98765 43211'}).
+                  Automatically send SMS check-in/check-out confirmation to primary guardian ({currentUser.parentPhone || 'no number on file'}).
                 </p>
               </div>
               <ToggleSwitch checked={parentSMSNotify} onChange={setParentSMSNotify} />
@@ -139,7 +139,7 @@ export default function StudentSettingsPage() {
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
           onClick={handleSave}
-          className="px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-colors flex items-center gap-2"
+          className="px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-teal-700 hover:from-violet-500 hover:to-teal-600 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-colors flex items-center gap-2"
         >
           <CheckCircle2 className="w-4 h-4" />
           <span>Save Preferences</span>

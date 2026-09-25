@@ -21,7 +21,13 @@ export default function WardenStudentsPage() {
       header: 'Resident Scholar',
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
-          <img src={row.original.avatar} alt={row.original.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-violet-500/20 shrink-0" />
+          {row.original.avatar ? (
+            <img src={row.original.avatar} alt={row.original.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-violet-500/20 shrink-0" />
+          ) : (
+            <span className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 font-extrabold text-sm flex items-center justify-center ring-2 ring-violet-500/20 shrink-0">
+              {row.original.name.charAt(0).toUpperCase()}
+            </span>
+          )}
           <div>
             <p className="font-extrabold text-sm text-zinc-900 dark:text-white leading-tight">{row.original.name}</p>
             <p className="text-xs text-zinc-500 mt-0.5">{row.original.email}</p>
@@ -35,9 +41,9 @@ export default function WardenStudentsPage() {
       cell: ({ row }) => (
         <div>
           <span className="font-extrabold text-sm text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/60 px-2.5 py-1 rounded-lg">
-            Room {row.original.roomNumber || '304A'}
+            {row.original.roomNumber ? `Room ${row.original.roomNumber}` : '—'}
           </span>
-          <span className="text-[11px] text-zinc-400 block mt-1 font-semibold">Block {row.original.block || 'B'}</span>
+          <span className="text-[11px] text-zinc-400 block mt-1 font-semibold">{row.original.block ? `Block ${row.original.block}` : '—'}</span>
         </div>
       ),
     },
@@ -46,8 +52,8 @@ export default function WardenStudentsPage() {
       header: 'Course & Academic Year',
       cell: ({ row }) => (
         <div>
-          <p className="font-bold text-xs text-zinc-900 dark:text-white">{row.original.course || 'B.Tech CSE & AI'}</p>
-          <p className="text-[10px] text-zinc-500 uppercase font-semibold">{row.original.year || '2nd Year'}</p>
+          <p className="font-bold text-xs text-zinc-900 dark:text-white">{row.original.course || '—'}</p>
+          <p className="text-[10px] text-zinc-500 uppercase font-semibold">{row.original.year || '—'}</p>
         </div>
       ),
     },
@@ -57,16 +63,16 @@ export default function WardenStudentsPage() {
       cell: ({ row }) => (
         <div className="text-xs space-y-0.5">
           <p className="font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
-            <Phone className="w-3 h-3 text-violet-500" /> {row.original.phone || '+91 98765 43210'}
+            <Phone className="w-3 h-3 text-violet-500" /> {row.original.phone || '—'}
           </p>
-          <p className="text-[10px] text-zinc-400">Parent: {row.original.parentPhone || '+91 98765 43211'}</p>
+          <p className="text-[10px] text-zinc-400">Parent: {row.original.parentPhone || '—'}</p>
         </div>
       ),
     },
     {
       accessorKey: 'attendanceToday',
       header: 'Today\'s Gate Status',
-      cell: ({ row }) => <StatusBadge status={row.original.attendanceToday || 'present'} />,
+      cell: ({ row }) => row.original.attendanceToday ? <StatusBadge status={row.original.attendanceToday} /> : <span className="text-xs text-zinc-400">—</span>,
     },
     {
       id: 'actions',
@@ -94,7 +100,7 @@ export default function WardenStudentsPage() {
           <span>Resident Scholars Directory</span>
         </h1>
         <p className="text-sm text-zinc-500 mt-1">
-          Complete database of female scholars in Block B. Filter by room number, course, or attendance status.
+          Complete directory of registered resident scholars. Filter by room number, course, or attendance status.
         </p>
       </div>
 
@@ -103,7 +109,7 @@ export default function WardenStudentsPage() {
           columns={columns}
           data={students}
           searchPlaceholder="Search resident name, email, course, or room number..."
-          title="Block B Resident Scholars Directory"
+          title="Resident Scholars Directory"
         />
       </Reveal>
 
@@ -135,18 +141,24 @@ export default function WardenStudentsPage() {
             </motion.button>
 
             <div className="flex items-center gap-4">
-              <img src={selectedStudent.avatar} alt={selectedStudent.name} className="w-16 h-16 rounded-2xl object-cover ring-4 ring-violet-500/20" />
+              {selectedStudent.avatar ? (
+                <img src={selectedStudent.avatar} alt={selectedStudent.name} className="w-16 h-16 rounded-2xl object-cover ring-4 ring-violet-500/20" />
+              ) : (
+                <span className="w-16 h-16 rounded-2xl bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 font-extrabold text-xl flex items-center justify-center ring-4 ring-violet-500/20">
+                  {selectedStudent.name.charAt(0).toUpperCase()}
+                </span>
+              )}
               <div>
                 <h3 className="text-xl font-extrabold text-zinc-900 dark:text-white">{selectedStudent.name}</h3>
-                <StatusBadge status={selectedStudent.attendanceToday || 'present'} size="sm" className="mt-1" />
+                {selectedStudent.attendanceToday && <StatusBadge status={selectedStudent.attendanceToday} size="sm" className="mt-1" />}
               </div>
             </div>
 
             <div className="space-y-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/60 dark:border-zinc-800 text-xs space-y-2.5">
-              <div className="flex justify-between"><span className="text-zinc-400 font-medium">Room & Block:</span><strong className="text-zinc-900 dark:text-white font-bold">Room {selectedStudent.roomNumber || '304A'} (Block {selectedStudent.block || 'B'})</strong></div>
-              <div className="flex justify-between"><span className="text-zinc-400 font-medium">Course:</span><strong className="text-zinc-900 dark:text-white font-bold">{selectedStudent.course || 'B.Tech CSE'}</strong></div>
-              <div className="flex justify-between"><span className="text-zinc-400 font-medium">Student Mobile:</span><strong className="text-zinc-900 dark:text-white font-bold">{selectedStudent.phone || '+91 98765 43210'}</strong></div>
-              <div className="flex justify-between"><span className="text-zinc-400 font-medium">Guardian Contact:</span><strong className="text-emerald-600 dark:text-emerald-400 font-bold">{selectedStudent.parentPhone || '+91 98765 43211'} (SMS Active)</strong></div>
+              <div className="flex justify-between"><span className="text-zinc-400 font-medium">Room & Block:</span><strong className="text-zinc-900 dark:text-white font-bold">{selectedStudent.roomNumber ? `Room ${selectedStudent.roomNumber}` : '—'}{selectedStudent.block ? ` (Block ${selectedStudent.block})` : ''}</strong></div>
+              <div className="flex justify-between"><span className="text-zinc-400 font-medium">Course:</span><strong className="text-zinc-900 dark:text-white font-bold">{selectedStudent.course || '—'}</strong></div>
+              <div className="flex justify-between"><span className="text-zinc-400 font-medium">Student Mobile:</span><strong className="text-zinc-900 dark:text-white font-bold">{selectedStudent.phone || '—'}</strong></div>
+              <div className="flex justify-between"><span className="text-zinc-400 font-medium">Guardian Contact:</span><strong className="text-emerald-600 dark:text-emerald-400 font-bold">{selectedStudent.parentPhone || '—'}</strong></div>
             </div>
 
             <div className="flex justify-end pt-2">

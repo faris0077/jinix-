@@ -1,5 +1,6 @@
 'use client';
 
+import { EmptyState } from '@/components/ui/EmptyState';
 import React, { useState } from 'react';
 import {
   ColumnDef,
@@ -105,7 +106,7 @@ export function DataTable<TData, TValue>({
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full pl-9 pr-4 py-2 text-sm rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all shadow-sm"
+              className="w-full pl-9 pr-4 py-2 text-sm rounded-xl glass-control focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all shadow-sm"
             />
             {globalFilter && (
               <button
@@ -135,7 +136,7 @@ export function DataTable<TData, TValue>({
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={springs.snappy}
-              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-700 dark:text-zinc-300"
+              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl glass-control hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-700 dark:text-zinc-300"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-violet-500" />
               <span>Columns</span>
@@ -184,7 +185,7 @@ export function DataTable<TData, TValue>({
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
             transition={springs.snappy}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-700 dark:text-zinc-300"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl glass-control hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-700 dark:text-zinc-300"
             title="Export as CSV"
           >
             <Download className="w-3.5 h-3.5 text-emerald-500" />
@@ -196,7 +197,7 @@ export function DataTable<TData, TValue>({
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
             transition={springs.snappy}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-700 dark:text-zinc-300"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl glass-control hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm text-zinc-700 dark:text-zinc-300"
             title="Export as Excel"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
@@ -214,7 +215,7 @@ export function DataTable<TData, TValue>({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8, transition: { duration: 0.2, ease: 'easeIn' } }}
           transition={{ duration: 0.3, ease: EASE_OUT }}
-          className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-between gap-4"
+          className="bg-gradient-to-r from-violet-600 to-teal-700 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-between gap-4"
         >
           <div className="flex items-center gap-2 text-xs font-bold">
             <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
@@ -331,11 +332,7 @@ export function DataTable<TData, TValue>({
               ) : (
                 <tr>
                   <td colSpan={columns.length} className="h-48 text-center text-zinc-500">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Sparkles className="w-8 h-8 text-zinc-300 dark:text-zinc-700" />
-                      <p className="font-semibold">No records found</p>
-                      <p className="text-xs text-zinc-400">Try adjusting your search filter or adding new entries.</p>
-                    </div>
+                    <EmptyState title="No records found" hint="Try adjusting your search filter or adding new entries." icon={Search} />
                   </td>
                 </tr>
               )}
@@ -350,7 +347,7 @@ export function DataTable<TData, TValue>({
             <select
               value={table.getState().pagination.pageSize}
               onChange={(e) => table.setPageSize(Number(e.target.value))}
-              className="px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white font-medium focus:outline-none focus:ring-1 focus:ring-violet-500"
+              className="px-2 py-1 rounded-lg glass-control text-zinc-900 dark:text-white font-medium focus:outline-none focus:ring-1 focus:ring-violet-500"
             >
               {[5, 10, 20, 50].map((size) => (
                 <option key={size} value={size}>

@@ -113,7 +113,7 @@ export default function WardenApprovalsPage() {
         <div className="text-xs font-medium space-y-0.5">
           <p className="text-zinc-900 dark:text-white font-bold">{row.original.startDate}</p>
           <p className="text-zinc-500">
-            Expected: {row.original.startTime ? `${row.original.startTime} to ${row.original.endTime}` : `Return by ${row.original.endDate || 'N/A'}`}
+            Expected: {row.original.startTime ? `${row.original.startTime} to ${row.original.endTime}` : `Return by ${row.original.endDate || '—'}`}
           </p>
           {row.original.actualArrivalTime ? (
             <p className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
@@ -251,7 +251,7 @@ export default function WardenApprovalsPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as any)}
-            className="px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-violet-500 capitalize"
+            className="px-3 py-1.5 rounded-xl glass-control text-xs font-bold text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-violet-500 capitalize"
           >
             <option value="all">All Categories</option>
             <option value="outpass">Local Outing</option>

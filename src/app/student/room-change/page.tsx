@@ -16,15 +16,6 @@ import {
 } from '@/lib/motion';
 
 export default function RoomChangePage() {
-  const { currentUser, submitRoomChangeRequest, rooms } = useChavaraStore();
-  
-  // Actually access store for requests but wait, I didn't export them in context directly,
-  // let's grab it via `roomChangeRequests` which I did add to `store.tsx`.
-  // Wait, I forgot to add `roomChangeRequests` to the context provider export in store.tsx.
-  // Oh no, let me check the store.tsx context provider.
-  // Ah, let's just use `useChavaraStore` and see if it's there. 
-  // Let's assume I need to fetch it.
-  
   return (
     <div className="space-y-8">
       <RoomChangeContent />
@@ -33,8 +24,7 @@ export default function RoomChangePage() {
 }
 
 function RoomChangeContent() {
-  const store = useChavaraStore() as any; 
-  // Workaround in case it's not strictly typed in the interface if I missed it, but I did add it to context.
+  const store = useChavaraStore() as any;
   const currentUser = store.currentUser;
   const myRequests = (store.roomChangeRequests || []).filter((req: any) => req.studentId === currentUser.id);
 
@@ -75,9 +65,9 @@ function RoomChangeContent() {
             <div className="mb-6 p-4 rounded-2xl bg-violet-50 dark:bg-violet-900/10 border border-violet-100 dark:border-violet-900/20 flex items-start gap-3">
               <Info className="w-5 h-5 text-violet-600 mt-0.5 shrink-0" />
               <div>
-                <h4 className="text-sm font-bold text-violet-900 dark:text-violet-300">Current Allocation: Room {currentUser.roomNumber} ({currentUser.block})</h4>
+                <h4 className="text-sm font-bold text-violet-900 dark:text-violet-300">Current Allocation: {currentUser.roomNumber ? `Room ${currentUser.roomNumber}${currentUser.block ? ` (Block ${currentUser.block})` : ''}` : 'Not assigned'}</h4>
                 <p className="text-xs text-violet-700 dark:text-violet-400 mt-1">
-                  Room transfers are generally processed at the end of the month. Emergency requests must be supported by valid reasons.
+                  Room transfers are subject to warden approval and availability. Emergency requests must be supported by valid reasons.
                 </p>
               </div>
             </div>
@@ -91,10 +81,10 @@ function RoomChangeContent() {
                   className="w-full px-4 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border-none focus:ring-2 focus:ring-violet-600"
                 >
                   <option value="Any">Any Available Block</option>
-                  <option value="A">Block A (St. Mary Wing)</option>
-                  <option value="B">Block B (St. Teresa Wing)</option>
-                  <option value="C">Block C (St. Clare Wing)</option>
-                  <option value="D">Block D (St. Agnes Wing)</option>
+                  <option value="A">Block A</option>
+                  <option value="B">Block B</option>
+                  <option value="C">Block C</option>
+                  <option value="D">Block D</option>
                 </select>
               </div>
 

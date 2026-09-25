@@ -21,58 +21,56 @@ import { toast } from 'sonner';
 import { motion, springs, fadeUp, hoverLift, Stagger, TiltCard } from '@/lib/motion';
 
 export default function DirectorReportsPage() {
-  const { feePayments, studentLeaves, complaints, rooms } = useChavaraStore();
+  const { feePayments, studentLeaves, complaints, rooms, foodOrders } = useChavaraStore();
 
   const handleDownloadReport = (title: string, format: 'PDF' | 'EXCEL') => {
     toast.success(`Generating ${format} Report: ${title}`, {
-      description: `Official Chavara Board Audit Dossier (Timestamp: ${new Date().toLocaleTimeString()}) has been compiled and downloaded.`,
+      description: `Report requested at ${new Date().toLocaleTimeString()}.`,
     });
   };
 
+  const totalBeds = rooms.reduce((acc, r) => acc + r.capacity, 0);
+  const mealsBooked = foodOrders.filter((f) => f.ordered).length;
+
   const reportCategories = [
     {
-      title: 'Monsoon Semester Financial Audit & Fee Reconciliation',
-      desc: 'Complete ledger of student accommodation fees, mess advances, and outstanding defaulters list across Blocks A, B, C, D.',
+      title: 'Financial Audit & Fee Reconciliation',
+      desc: 'Ledger of student fee payments and outstanding balances.',
       icon: DollarSign,
       color: 'from-emerald-600 to-teal-600',
       records: `${feePayments.length} Invoices`,
-      lastUpdated: 'Today at 08:00 AM',
       id: 'fin-01',
     },
     {
-      title: '24-Hour Gate Movement & Curfew Compliance Log',
-      desc: 'Turnstile check-in/out audit, late curfew arrivals, library study logs, and external delivery (Swiggy/Zomato) records.',
+      title: 'Gate Movement & Curfew Compliance Log',
+      desc: 'Student leave, outpass and gate movement records.',
       icon: ShieldCheck,
-      color: 'from-violet-600 to-purple-600',
+      color: 'from-violet-600 to-teal-700',
       records: `${studentLeaves.length} Gate Logs`,
-      lastUpdated: 'Live Sync',
       id: 'sec-02',
     },
     {
-      title: 'Institutional Accommodation & Room Allocation Census',
-      desc: 'Bed occupancy ratios, roommate mappings, and course-wise demographic distribution across residence wings.',
+      title: 'Accommodation & Room Allocation Census',
+      desc: 'Bed occupancy across residence blocks.',
       icon: Users,
-      color: 'from-blue-600 to-indigo-600',
-      records: '450 Beds / 4 Blocks',
-      lastUpdated: 'July 25, 2026',
+      color: 'from-blue-600 to-teal-700',
+      records: `${totalBeds} Beds / ${rooms.length} Rooms`,
       id: 'occ-03',
     },
     {
-      title: 'Mess Kitchen Headcount & Dietary Consumption Analysis',
-      desc: 'Breakfast, lunch, tea, and dinner booking vs cancellation tallies for catering procurement optimization.',
+      title: 'Mess Headcount & Dietary Consumption Analysis',
+      desc: 'Meal booking tallies for catering planning.',
       icon: Utensils,
       color: 'from-amber-600 to-orange-600',
-      records: '1,565 Meals Daily',
-      lastUpdated: '1 hour ago',
+      records: `${mealsBooked} Meals Booked`,
       id: 'food-04',
     },
     {
-      title: 'Campus Infrastructure & Maintenance SLA Dossier',
-      desc: 'Turnaround times for electrical, plumbing, Wi-Fi, and security helpdesk complaints across all blocks.',
+      title: 'Maintenance & Helpdesk Dossier',
+      desc: 'Status of maintenance and helpdesk complaints across all blocks.',
       icon: AlertCircle,
       color: 'from-rose-600 to-pink-600',
       records: `${complaints.length} Tickets`,
-      lastUpdated: 'Yesterday',
       id: 'maint-05',
     },
   ];
@@ -85,23 +83,23 @@ export default function DirectorReportsPage() {
           <span>Institutional Audit & Executive Report Center</span>
         </h1>
         <p className="text-sm text-zinc-500 mt-1">
-          Generate board-certified financial ledgers, biometric gate compliance audits, and occupancy censuses.
+          Generate financial ledgers, gate compliance logs, and occupancy censuses from current records.
         </p>
       </div>
 
       {/* Quick Action Top Bar */}
       <TiltCard max={4}>
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-violet-900 via-purple-900 to-zinc-950 text-white shadow-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-6">
+      <div className="p-6 rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 hero-surface text-white shadow-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-6">
         <div className="space-y-1">
           <span className="text-xs font-bold uppercase tracking-wider text-violet-300 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-amber-400" /> Master Executive Package
           </span>
-          <h2 className="text-lg font-bold text-white">Download Q3 2026 Board Governance Dossier</h2>
-          <p className="text-xs text-zinc-300">Includes all 5 departmental audit reports bundled in a single verified PDF zip.</p>
+          <h2 className="text-lg font-bold text-white">Download Board Governance Dossier</h2>
+          <p className="text-xs text-zinc-300">Bundles all departmental reports listed below.</p>
         </div>
 
         <motion.button
-          onClick={() => handleDownloadReport('Chavara_Q3_Master_Dossier_2026', 'PDF')}
+          onClick={() => handleDownloadReport('Board Governance Dossier', 'PDF')}
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
@@ -139,9 +137,6 @@ export default function DirectorReportsPage() {
                       </span>
                     </div>
                     <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">{rep.desc}</p>
-                    <span className="text-[11px] text-zinc-400 font-medium block pt-1">
-                      Last Compiled: {rep.lastUpdated}
-                    </span>
                   </div>
                 </div>
 

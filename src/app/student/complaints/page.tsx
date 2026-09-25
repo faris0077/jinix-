@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { format } from 'date-fns';
 import { useChavaraStore } from '@/lib/store';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Timeline } from '@/components/ui/Timeline';
@@ -16,7 +17,13 @@ export default function ComplaintsPage() {
   const [category, setCategory] = useState<'plumbing' | 'electrical' | 'wifi' | 'food' | 'security' | 'other'>('wifi');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [image, setImage] = useState<string | null>('router_signal_drop_screenshot.png');
+  const [image, setImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const latest = [...complaints].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+  const fmt = (d?: string) => {
+    const t = d ? new Date(d) : null;
+    return t && !isNaN(t.getTime()) ? format(t, 'd MMM, HH:mm') : undefined;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +112,7 @@ export default function ComplaintsPage() {
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Issue Title / Headline *</label>
-                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Wi-Fi signal drop in Room 304A" required className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border text-sm font-medium" />
+                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Short summary of the issue" required className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border text-sm font-medium" />
               </div>
             </div>
 
@@ -116,6 +123,17 @@ export default function ComplaintsPage() {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Attach Photo Proof (Optional)</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const picked = e.target.files?.[0];
+                  if (picked) setImage(picked.name);
+                  e.target.value = '';
+                }}
+              />
               <AnimatePresence mode="wait" initial={false}>
                 {image ? (
                   <motion.div
@@ -138,7 +156,7 @@ export default function ComplaintsPage() {
                     initial="hidden"
                     animate="visible"
                     exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.25, ease: 'easeIn' } }}
-                    onClick={() => setImage('leakage_photo_room_304A.jpg')}
+                    onClick={() => fileInputRef.current?.click()}
                     className="p-6 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-violet-500 transition-colors text-center cursor-pointer bg-zinc-50/50 dark:bg-zinc-900/30 space-y-1"
                   >
                     <UploadCloud className="w-7 h-7 text-violet-500 mx-auto" />
@@ -161,14 +179,28 @@ export default function ComplaintsPage() {
         </StaggerItem>
 
         <StaggerItem className="glass-card p-6 sm:p-8 rounded-3xl space-y-4">
-          <h3 className="font-bold text-base text-zinc-900 dark:text-white">Active Ticket Resolution Timeline</h3>
-          <Timeline
-            steps={[
-              { title: 'Ticket CMP-2026-001 Logged', description: 'Wi-Fi router signal drop reported in Block B 3rd Floor', timestamp: 'July 23, 19:40', status: 'completed' },
-              { title: 'Assigned to IT Support Lead', description: 'Mr. Rajesh Kumar inspecting access point B-03', timestamp: 'In Progress', status: 'current' },
-              { title: 'Final Resolution & Sign-off', description: 'Ticket closed after network benchmark test', timestamp: 'Pending', status: 'pending' },
-            ]}
-          />
+          <h3 className="font-bold text-base text-zinc-900 dark:text-white">Latest Ticket Resolution Timeline</h3>
+          {latest ? (
+            <Timeline
+              steps={[
+                { title: `Ticket ${latest.id} Logged`, description: latest.title, timestamp: fmt(latest.createdAt), status: 'completed' },
+                {
+                  title: latest.assignedTo ? `Assigned to ${latest.assignedTo}` : 'Awaiting Assignment',
+                  description: latest.assignedTo ? 'Maintenance is handling this ticket' : 'Not yet assigned to a specialist',
+                  timestamp: latest.status === 'in-progress' ? 'In Progress' : latest.status === 'resolved' ? 'Done' : 'Pending',
+                  status: latest.status === 'resolved' ? 'completed' : latest.status === 'in-progress' ? 'current' : 'pending',
+                },
+                {
+                  title: 'Final Resolution & Sign-off',
+                  description: latest.status === 'resolved' ? 'Ticket resolved' : 'Ticket not yet resolved',
+                  timestamp: latest.status === 'resolved' ? fmt(latest.resolvedAt) : 'Pending',
+                  status: latest.status === 'resolved' ? 'completed' : 'pending',
+                },
+              ]}
+            />
+          ) : (
+            <p className="text-xs text-zinc-500 italic py-6 text-center">No tickets logged yet.</p>
+          )}
         </StaggerItem>
       </Stagger>
 

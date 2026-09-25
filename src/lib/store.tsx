@@ -25,6 +25,7 @@ import {
   Room,
   LostFoundItem,
   RoomChangeRequest,
+  GUEST_USER,
   INITIAL_USERS,
   INITIAL_LEAVES,
   INITIAL_FOOD_ORDERS,
@@ -147,7 +148,7 @@ const dbWrite = (label: string, run: () => PromiseLike<{ error: { message: strin
 };
 
 export function ChavaraStoreProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUserState] = useState<User>(INITIAL_USERS[0]); // Ananya Sharma (Student) by default
+  const [currentUser, setCurrentUserState] = useState<User>(GUEST_USER);
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(INITIAL_LEAVES);
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>(INITIAL_FOOD_ORDERS);
@@ -252,7 +253,13 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
       .maybeSingle();
 
     if (error || !profile) {
-      await supabase!.auth.signOut();
+      // The account no longer exists server-side, so any sign-out request would be
+      // rejected with a 403. Drop the stored session locally without a network call.
+      try {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith('sb-') && k.endsWith('-auth-token'))
+          .forEach((k) => localStorage.removeItem(k));
+      } catch { /* ignore */ }
       setAuthStatus('unauthenticated');
       toast.error('No portal profile is linked to this account.', {
         description: 'Ask a warden or director to check your account setup.',
@@ -270,6 +277,10 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
   // Initial load
   useEffect(() => {
     if (isSupabaseConfigured && supabase) {
+      try {
+        localStorage.removeItem(STORE_KEY);
+        localStorage.removeItem(USER_KEY);
+      } catch { /* ignore */ }
       supabase.auth.getSession()
         .then(({ data }) => {
           if (data.session) {
@@ -454,7 +465,7 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
       id: newId,
       studentId: currentUser.id,
       studentName: currentUser.name,
-      roomNumber: currentUser.roomNumber || '304A',
+      roomNumber: currentUser.roomNumber || 'Not assigned',
       status: 'pending',
       createdAt: new Date().toISOString(),
     };
@@ -565,8 +576,8 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
       id: newId,
       studentId: currentUser.id,
       studentName: currentUser.name,
-      roomNumber: deliv.roomNumber || currentUser.roomNumber || '304A',
-      department: deliv.department || currentUser.course || 'B.Tech Computer Science',
+      roomNumber: deliv.roomNumber || currentUser.roomNumber || 'Not assigned',
+      department: deliv.department || currentUser.course || 'Not set',
       date: deliv.date || new Date().toISOString().split('T')[0],
       status: 'en-route',
       orderedAt: new Date().toISOString(),
@@ -649,7 +660,7 @@ export function ChavaraStoreProvider({ children }: { children: React.ReactNode }
       id: newId,
       studentId: currentUser.id,
       studentName: currentUser.name,
-      roomNumber: currentUser.roomNumber || '304A',
+      roomNumber: currentUser.roomNumber || 'Not assigned',
       status: 'submitted',
       createdAt: new Date().toISOString(),
     };

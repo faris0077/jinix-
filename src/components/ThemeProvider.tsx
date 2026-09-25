@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
 
+export const THEME_STORAGE_KEY = 'chavara-theme';
+
 interface ThemeProviderState {
   theme: Theme;
   setTheme: (theme: Theme) => void;
@@ -25,9 +27,24 @@ export function ThemeProvider({
   defaultTheme?: Theme;
   [key: string]: any;
 }) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
+  const [theme, setThemeState] = useState<Theme>(defaultTheme);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(THEME_STORAGE_KEY);
+      if (saved === 'dark' || saved === 'light' || saved === 'system') setThemeState(saved);
+    } catch { /* storage unavailable */ }
+    setHydrated(true);
+  }, []);
+
+  const setTheme = (next: Theme) => {
+    setThemeState(next);
+    try { localStorage.setItem(THEME_STORAGE_KEY, next); } catch { /* ignore */ }
+  };
+
+  useEffect(() => {
+    if (!hydrated) return;
     const root = window.document.documentElement;
 
     root.classList.remove('light', 'dark');
@@ -43,7 +60,7 @@ export function ThemeProvider({
     }
 
     root.classList.add(theme);
-  }, [theme]);
+  }, [theme, hydrated]);
 
   return (
     <ThemeProviderContext.Provider value={{ theme, setTheme }}>

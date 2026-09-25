@@ -143,7 +143,7 @@ export default function WardenVisitorsPage() {
                     <StatusBadge status="collected" size="sm" />
                   </div>
                   <div className="text-[10px] text-zinc-400 mt-1">
-                    Arrived: {delivery.actualArrivalTime || 'Unknown'}
+                    Arrived: {delivery.actualArrivalTime || '—'}
                   </div>
                 </motion.div>
               ))}

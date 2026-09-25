@@ -27,9 +27,11 @@ export default function WardenComplaintsPage() {
   };
 
   const handleAssign = (id: string, title: string) => {
-    updateComplaintStatus(id, 'in-progress', 'Mr. Rajesh Kumar (Senior IT & Electrical Engineer)');
-    toast.info(`Assigned specialist to ticket: ${title}`, {
-      description: 'Maintenance team dispatched to location.',
+    const assignee = window.prompt('Assign to (name or team):', 'Maintenance Team')?.trim();
+    if (!assignee) return;
+    updateComplaintStatus(id, 'in-progress', assignee);
+    toast.info(`Assigned ticket: ${title}`, {
+      description: `Assigned to ${assignee}.`,
     });
   };
 
@@ -48,7 +50,7 @@ export default function WardenComplaintsPage() {
             <span className="font-bold text-sm text-zinc-900 dark:text-white">{row.original.title}</span>
             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">{row.original.category}</span>
           </div>
-          <p className="text-xs text-zinc-500 mt-0.5">Reported by Resident in Room {row.original.roomNumber || '304A'} ({row.original.createdAt})</p>
+          <p className="text-xs text-zinc-500 mt-0.5">Reported by {row.original.studentName || 'Resident'}{row.original.roomNumber ? `, Room ${row.original.roomNumber}` : ''} ({row.original.createdAt})</p>
         </div>
       ),
     },
@@ -57,7 +59,7 @@ export default function WardenComplaintsPage() {
       header: 'Assigned Specialist',
       cell: ({ row }) => (
         <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
-          {row.original.assignedTo || 'Unassigned Queue'}
+          {row.original.assignedTo || 'Unassigned'}
         </span>
       ),
     },
@@ -126,7 +128,7 @@ export default function WardenComplaintsPage() {
           <span>Warden Helpdesk & Maintenance Supervision</span>
         </h1>
         <p className="text-sm text-zinc-500 mt-1">
-          Monitor Block B maintenance tickets. Assign IT/plumbing engineers and sign off on resolved complaints.
+          Monitor maintenance tickets. Assign them to a person or team and sign off on resolved complaints.
         </p>
       </div>
 
@@ -159,7 +161,7 @@ export default function WardenComplaintsPage() {
       </div>
 
       <Reveal delay={0.1}>
-        <DataTable columns={columns} data={filteredData} searchPlaceholder="Search ticket title or room number..." title="Block B Maintenance Log" />
+        <DataTable columns={columns} data={filteredData} searchPlaceholder="Search ticket title or room number..." title="Maintenance Log" />
       </Reveal>
     </div>
   );

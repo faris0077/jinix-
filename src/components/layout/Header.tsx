@@ -67,7 +67,7 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-20 h-16 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md border-b border-zinc-200/60 dark:border-zinc-800/60 px-6 flex items-center justify-between transition-colors duration-200">
+      <header className="relative z-20 h-16 shrink-0 rounded-2xl glass-bar px-5 flex items-center justify-between">
         {/* Left: Breadcrumbs */}
         <div className="flex items-center gap-2 overflow-hidden text-sm">
           <Link
@@ -103,7 +103,7 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
             transition={springs.snappy}
-            className="flex items-center gap-3 px-3.5 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-violet-500/50 transition-colors shadow-sm group w-48 sm:w-64"
+            className="flex items-center gap-3 px-3.5 py-1.5 rounded-xl glass-control text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-violet-500/50 transition-colors shadow-sm group w-48 sm:w-64"
           >
             <Search className="w-4 h-4 text-zinc-400 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors" />
             <span className="text-xs font-medium flex-1 text-left truncate">Search anything...</span>
@@ -118,7 +118,7 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
             transition={springs.snappy}
-            className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/80 transition-colors relative group"
+            className="w-9 h-9 rounded-xl glass-control flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/80 transition-colors relative group"
             title="Toggle Dark / Light Mode"
           >
             <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-amber-500" />
@@ -131,7 +131,7 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
               onClick={() => setIsNotifDrawerOpen(true)}
               whileTap={{ scale: 0.97 }}
               transition={springs.snappy}
-              className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/80 transition-colors relative"
+              className="w-9 h-9 rounded-xl glass-control flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/80 transition-colors relative"
               title="Notifications"
             >
               <Bell className="w-4 h-4" />
@@ -183,7 +183,7 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.97, y: -6, transition: { duration: 0.15 } }}
                     transition={springs.snappy}
-                    className="absolute right-0 top-12 w-56 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xl z-40 overflow-hidden"
+                    className="absolute right-0 top-12 w-56 rounded-2xl glass-strong shadow-2xl z-40 overflow-hidden"
                   >
                     <div className="p-3 border-b border-zinc-100 dark:border-zinc-800">
                       <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">{currentUser.name}</p>
@@ -209,7 +209,7 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                       >
-                        <LogOut className="w-4 h-4" /> {isCloudSynced ? 'Sign Out' : 'Exit Demo'}
+                        <LogOut className="w-4 h-4" /> Sign Out
                       </button>
                     </div>
                   </motion.div>
@@ -231,7 +231,7 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsNotifDrawerOpen(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-slate-950/30 backdrop-blur-md z-50"
             />
 
             <motion.div
@@ -239,7 +239,7 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={springs.soft}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-sm bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 z-50 flex flex-col shadow-2xl"
+              className="fixed right-3 top-3 bottom-3 w-[calc(100%-1.5rem)] max-w-sm rounded-3xl glass-strong z-50 flex flex-col overflow-hidden"
             >
               <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/50">
                 <div className="flex items-center gap-2">
@@ -384,14 +384,15 @@ function ChangePasswordModal({ open, onOpenChange }: { open: boolean; onOpenChan
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={close}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-slate-950/30 backdrop-blur-md z-50"
           />
-          <motion.div
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
             variants={scaleIn}
             initial="hidden"
             animate="visible"
             exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.15 } }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-50 p-6 space-y-4"
+            className="pointer-events-auto w-full max-w-sm glass-strong rounded-2xl shadow-2xl z-50 p-6 space-y-4"
           >
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
@@ -450,6 +451,7 @@ function ChangePasswordModal({ open, onOpenChange }: { open: boolean; onOpenChan
               </motion.button>
             </form>
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

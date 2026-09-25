@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useChavaraStore } from '@/lib/store';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import {
   Users,
@@ -22,8 +23,8 @@ import {
   PackageCheck
 } from 'lucide-react';
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -47,31 +48,32 @@ import {
 } from '@/lib/motion';
 import { toast } from 'sonner';
 
-const MOVEMENT_DATA = [
-  { time: '06:00', present: 450, outpass: 0, leave: 0 },
-  { time: '09:00', present: 420, outpass: 25, leave: 5 },
-  { time: '12:00', present: 380, outpass: 60, leave: 10 },
-  { time: '15:00', present: 390, outpass: 50, leave: 10 },
-  { time: '18:00', present: 410, outpass: 30, leave: 10 },
-  { time: '20:30', present: 445, outpass: 2, leave: 3 }, // Curfew check
-];
-
-const COURSE_PIE_DATA = [
-  { name: 'B.Tech CSE & AI', value: 180, color: '#8d7cc9' },
-  { name: 'MBA Executive', value: 110, color: '#1c9a89' },
-  { name: 'M.Sc Biotech', value: 90, color: '#b3812c' },
-  { name: 'B.Arch & Design', value: 70, color: '#4f80b8' },
-];
+const CHART_COLORS = ['#0d9488', '#2563eb', '#d97706', '#8b5cf6', '#e11d48'];
 
 export default function WardenDashboard() {
   const { currentUser, studentLeaves, users, rooms, complaints, approveLeave, rejectLeave, externalDeliveries, updateDeliveryStatus } = useChavaraStore();
 
-  const totalStudents = users.filter((u) => u.role === 'student').length;
+  const students = users.filter((u) => u.role === 'student');
+  const totalStudents = students.length;
+  const statusCounts = [
+    { label: 'Present', key: 'present' },
+    { label: 'On Leave', key: 'on-leave' },
+    { label: 'Outpass', key: 'outpass' },
+    { label: 'Library', key: 'library' },
+  ].map(({ label, key }) => ({ status: label, count: students.filter((u) => u.attendanceToday === key).length }));
+  const statusData = statusCounts.some((d) => d.count > 0) ? statusCounts : [];
+  const courseMap = students.reduce<Record<string, number>>((acc, u) => {
+    const key = u.course?.trim() || 'Not set';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const coursePieData = Object.entries(courseMap).map(([name, value], i) => ({ name, value, color: CHART_COLORS[i % CHART_COLORS.length] }));
   const pendingLeaves = studentLeaves.filter((l) => l.status === 'pending');
   const activeOutingsCount = studentLeaves.filter((l) => l.type === 'outpass' && l.status === 'approved').length;
   const openComplaintsCount = complaints.filter((c) => c.status !== 'resolved').length;
   const totalBeds = rooms.reduce((acc, r) => acc + r.capacity, 0);
   const occupiedBeds = rooms.reduce((acc, r) => acc + r.occupied, 0);
+  const occupancyPct = totalBeds > 0 ? `${((occupiedBeds / totalBeds) * 100).toFixed(1)}% Full` : '—';
   const activeDeliveries = externalDeliveries.filter((d) => d.status === 'en-route' || d.status === 'arrived-gate');
 
   const handleQuickApprove = (id: string, name: string) => {
@@ -91,14 +93,14 @@ export default function WardenDashboard() {
   return (
     <div className="space-y-8">
       {/* Hero Banner */}
-      <TiltCard max={4} className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-950 via-purple-900 to-zinc-950 p-6 sm:p-8 text-white shadow-xl border border-violet-500/30">
+      <TiltCard max={4} className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 hero-surface p-6 sm:p-8 text-white shadow-xl border border-violet-500/30">
         <div className="absolute -right-10 -top-10 w-80 h-80 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-violet-200 border border-white/10">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Block B (St. Teresa Wing) Executive Supervisory Console</span>
+              <span>Warden Supervisory Console</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
               Warden Operations Dashboard 🛡️
@@ -132,10 +134,10 @@ export default function WardenDashboard() {
               <AnimatedNumber value={occupiedBeds} format={(v) => `${Math.round(v)}`} /> / <AnimatedNumber value={totalBeds} format={(v) => `${Math.round(v)}`} />
             </span>
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
-              98.8% Full
+              {occupancyPct}
             </span>
           </div>
-          <p className="text-xs text-zinc-500">Total Residents: {totalStudents} Scholars</p>
+          <p className="text-xs text-zinc-500">Total Residents: {totalStudents}</p>
         </StaggerItem>
 
         <StaggerItem className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group border-amber-500/30">
@@ -149,7 +151,7 @@ export default function WardenDashboard() {
             </span>
             <StatusBadge status="pending" size="sm" />
           </div>
-          <p className="text-xs text-zinc-500">Needs review before 8:00 PM curfew</p>
+          <p className="text-xs text-zinc-500">Awaiting warden review</p>
         </StaggerItem>
 
         <StaggerItem className="glass-card p-5 rounded-2xl space-y-3 relative overflow-hidden group">
@@ -162,7 +164,7 @@ export default function WardenDashboard() {
               <AnimatedNumber value={activeDeliveries.length} format={(v) => `${Math.round(v)}`} />
             </span>
             <span className="text-xs text-orange-600 font-bold bg-orange-50 dark:bg-orange-950/60 px-2 py-0.5 rounded">
-              Swiggy / Zomato
+              External
             </span>
           </div>
           <p className="text-xs text-zinc-500">External deliveries en route / at gate</p>
@@ -178,7 +180,7 @@ export default function WardenDashboard() {
               <AnimatedNumber value={openComplaintsCount} format={(v) => `${Math.round(v)}`} />
             </span>
             <span className="text-xs text-rose-600 font-bold bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded">
-              Needs IT / Plumbing
+              Open Tickets
             </span>
           </div>
           <p className="text-xs text-zinc-500">Helpdesk tickets in progress</p>
@@ -193,36 +195,29 @@ export default function WardenDashboard() {
             <div>
               <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-violet-600" />
-                <span>24-Hour Campus Gate Movement & Curfew Trajectory</span>
+                <span>Residents by Status Today</span>
               </h3>
-              <p className="text-xs text-zinc-500">Real-time resident check-in/out logs vs curfew threshold</p>
+              <p className="text-xs text-zinc-500">Current attendance snapshot from the resident register</p>
             </div>
             <span className="text-xs font-bold text-violet-600 bg-violet-100 dark:bg-violet-950/60 px-2.5 py-1 rounded-lg">
-              Live Register Sync
+              Live Snapshot
             </span>
           </div>
 
           <div className="h-64 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={MOVEMENT_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorPres" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2c7d52" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#2c7d52" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="colorOut" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8d7cc9" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#8d7cc9" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.15)" vertical={false} />
-                <XAxis dataKey="time" stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(28, 27, 34, 0.95)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px' }} />
-                <Area type="monotone" name="Scholars Inside Campus" dataKey="present" stroke="#2c7d52" strokeWidth={3} fillOpacity={1} fill="url(#colorPres)" />
-                <Area type="monotone" name="Active Outings / Leaves" dataKey="outpass" stroke="#8d7cc9" strokeWidth={2} fillOpacity={1} fill="url(#colorOut)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {statusData.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={statusData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.15)" vertical={false} />
+                  <XAxis dataKey="status" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '12px' }} />
+                  <Bar name="Residents" dataKey="count" fill="#0d9488" radius={[6, 6, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Reveal>
 
@@ -233,24 +228,28 @@ export default function WardenDashboard() {
               <Users className="w-5 h-5 text-violet-600" />
               <span>Demographic by Course</span>
             </h3>
-            <p className="text-xs text-zinc-500">Distribution of residents in Block B</p>
+            <p className="text-xs text-zinc-500">Distribution of residents by course</p>
           </div>
 
           <div className="h-44 w-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={COURSE_PIE_DATA} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={4} dataKey="value">
-                  {COURSE_PIE_DATA.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(28, 27, 34, 0.95)', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '11px' }} />
-              </PieChart>
-            </ResponsiveContainer>
+            {coursePieData.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={coursePieData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={4} dataKey="value">
+                    {coursePieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '11px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
-            {COURSE_PIE_DATA.map((c) => (
+            {coursePieData.map((c) => (
               <div key={c.name} className="flex items-center gap-1.5 truncate">
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
                 <span className="text-zinc-600 dark:text-zinc-400 truncate font-medium">{c.name} ({c.value})</span>
@@ -268,7 +267,7 @@ export default function WardenDashboard() {
               <ShoppingBag className="w-5 h-5 text-orange-500" />
               <span>Gate Delivery Security Watchlist ({activeDeliveries.length} Active Orders)</span>
             </h3>
-            <p className="text-xs text-zinc-500">Real-time radar of Swiggy, Zomato, and Instamart couriers arriving at Block B Gate</p>
+            <p className="text-xs text-zinc-500">Real-time radar of Swiggy, Zomato, and Instamart couriers arriving at the security gate</p>
           </div>
           <span className="text-xs font-bold text-orange-600 bg-orange-100 dark:bg-orange-950/80 px-3 py-1 rounded-full border border-orange-200 dark:border-orange-900">
             Security Gate Feed
@@ -283,7 +282,7 @@ export default function WardenDashboard() {
             </motion.div>
           ) : (
             activeDeliveries.map((deliv) => (
-              <motion.div key={deliv.id} variants={listItem} initial="hidden" animate="visible" exit="exit" layout className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <motion.div key={deliv.id} variants={listItem} initial="hidden" animate="visible" exit="exit" layout className="p-4 rounded-2xl glass-control shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-extrabold text-sm text-zinc-900 dark:text-white">{deliv.studentName}</span>
@@ -291,7 +290,7 @@ export default function WardenDashboard() {
                       Room {deliv.roomNumber}
                     </span>
                     <span className="text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-2 py-0.5 rounded">
-                      {deliv.department || 'B.Tech CS'}
+                      {deliv.department || '—'}
                     </span>
                     <span className="font-bold text-xs bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 px-2.5 py-0.5 rounded-md">
                       {deliv.platform}
@@ -376,7 +375,7 @@ export default function WardenDashboard() {
             </motion.div>
           ) : (
             pendingLeaves.slice(0, 3).map((req) => (
-              <motion.div key={req.id} variants={listItem} initial="hidden" animate="visible" exit="exit" layout className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors hover:border-violet-500/40">
+              <motion.div key={req.id} variants={listItem} initial="hidden" animate="visible" exit="exit" layout className="p-4 rounded-2xl glass-control shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors hover:border-violet-500/40">
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-extrabold text-sm text-zinc-900 dark:text-white">{req.studentName}</span>

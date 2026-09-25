@@ -39,6 +39,10 @@ import { motion, AnimatePresence, springs, EASE_OUT } from '@/lib/motion';
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (window.innerWidth < 1100) setIsCollapsed(true);
+  }, []);
   const pathname = usePathname();
   const router = useRouter();
   const [activeHash, setActiveHash] = useState('');
@@ -105,7 +109,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'relative h-screen bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-r border-zinc-200/60 dark:border-zinc-800/60 flex flex-col transition-all duration-300 z-30 select-none soft-shadow',
+        'relative z-20 h-full rounded-3xl glass-strong flex flex-col transition-[width] duration-300 select-none overflow-hidden shrink-0',
         isCollapsed ? 'w-[80px]' : 'w-[260px]'
       )}
     >
@@ -113,7 +117,7 @@ export function Sidebar() {
       <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-200/60 dark:border-zinc-800/60">
         {!isCollapsed ? (
           <Link href={`/${currentUser.role}/dashboard`} className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-700 via-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-violet-600/30 font-bold text-lg shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-700 via-teal-600 to-teal-700 flex items-center justify-center text-white shadow-lg shadow-violet-600/30 font-bold text-lg shrink-0">
               C
             </div>
             <div className="flex flex-col">
@@ -127,7 +131,7 @@ export function Sidebar() {
           </Link>
         ) : (
           <Link href={`/${currentUser.role}/dashboard`} className="mx-auto">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-700 via-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-violet-600/30 font-bold text-lg">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-700 via-teal-600 to-teal-700 flex items-center justify-center text-white shadow-lg shadow-violet-600/30 font-bold text-lg">
               C
             </div>
           </Link>
@@ -152,7 +156,7 @@ export function Sidebar() {
       {/* Role Indicator Banner */}
       {!isCollapsed && (
         <div className="px-3 pt-3">
-          <div className="bg-gradient-to-r from-violet-600/10 via-purple-600/10 to-transparent border border-violet-500/20 rounded-xl p-2.5 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-violet-600/10 via-teal-600/10 to-transparent border border-violet-500/20 rounded-xl p-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
               <span className="text-xs font-semibold capitalize text-violet-900 dark:text-violet-300">
@@ -167,7 +171,12 @@ export function Sidebar() {
       )}
 
       {/* Navigation Links */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+        {!isCollapsed && (
+          <p className="px-3 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
+            Main menu
+          </p>
+        )}
         {navItems.map((item) => {
           let isActive = false;
           if (item.href.includes('#')) {
@@ -207,7 +216,7 @@ export function Sidebar() {
                 <motion.div
                   layoutId="sidebar-active-pill"
                   transition={springs.soft}
-                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 shadow-md shadow-violet-600/20"
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 shadow-lg shadow-teal-600/35 ring-1 ring-white/25"
                 />
               )}
 
@@ -269,7 +278,7 @@ export function Sidebar() {
       <div className="p-3 border-t border-zinc-200/60 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/30">
         {!isCollapsed ? (
           <div className="space-y-2">
-            <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 shadow-sm">
+            <div className="flex items-center gap-3 p-2 rounded-xl glass-control shadow-sm">
               <img
                 src={currentUser.avatar}
                 alt={currentUser.name}

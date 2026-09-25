@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useChavaraStore } from '@/lib/store';
-import { UserRole } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import {
   ShieldCheck,
@@ -27,16 +26,14 @@ import {
   Stagger,
   StaggerItem,
   TiltCard,
-  AnimatedNumber,
 } from '@/lib/motion';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { switchRole, login, isCloudSynced, authStatus, currentUser } = useChavaraStore();
+  const { login, isCloudSynced, authStatus, currentUser } = useChavaraStore();
 
-  const [role, setRole] = useState<UserRole>('student');
-  const [email, setEmail] = useState(isCloudSynced ? '' : 'ananya.sharma@chavara.edu');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -48,13 +45,6 @@ export default function LoginPage() {
       router.replace(`/${currentUser.role}/dashboard`);
     }
   }, [authStatus, currentUser.role, router]);
-
-  const handleRoleChange = (newRole: UserRole) => {
-    setRole(newRole);
-    if (newRole === 'student') setEmail('ananya.sharma@chavara.edu');
-    if (newRole === 'warden') setEmail('mary.thomas@chavara.edu');
-    if (newRole === 'director') setEmail('celine.dsouza@chavara.edu');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,19 +64,12 @@ export default function LoginPage() {
       return;
     }
 
-    // Local demo mode: no real credentials exist — the role tab picks the persona.
-    setTimeout(() => {
-      setIsLoading(false);
-      switchRole(role);
-      toast.success(`Welcome back to Chavara Residence OS!`, {
-        description: `Logged into ${role.toUpperCase()} executive portal.`,
-      });
-      router.push(`/${role}/dashboard`);
-    }, 800);
+    setIsLoading(false);
+    toast.error('Sign in unavailable', { description: 'The backend is not configured on this deployment.' });
   };
 
   return (
-    <div className="min-h-screen w-full flex items-stretch bg-zinc-950 text-white overflow-hidden relative selection:bg-violet-600 selection:text-white">
+    <div className="min-h-screen w-full flex items-stretch bg-background text-foreground overflow-hidden relative selection:bg-violet-600 selection:text-white">
       {/* Background Ambient Gradients */}
       <div className="absolute top-1/4 left-10 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
       <div className="absolute bottom-10 right-1/3 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
@@ -95,19 +78,19 @@ export default function LoginPage() {
       <Stagger
         stagger={0.12}
         delay={0.1}
-        className="hidden lg:flex lg:w-7/12 relative flex-col justify-between p-12 overflow-hidden border-r border-zinc-800/80 bg-zinc-900/40"
+        className="hidden lg:flex lg:w-7/12 relative flex-col justify-between p-12 overflow-hidden border-r border-teal-800/40 bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 hero-surface text-white"
       >
         {/* Background Image with Overlay */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity scale-105 transition-transform duration-1000"
+          className="absolute inset-0 bg-cover bg-center opacity-20 mix-blend-overlay scale-105 transition-transform duration-1000"
           style={{ backgroundImage: `url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1600&auto=format&fit=crop&q=80')` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-teal-950/70 via-teal-900/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-violet-950/30 to-transparent" />
 
         {/* Top Branding */}
         <StaggerItem className="relative z-10 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-purple-500 to-indigo-500 flex items-center justify-center font-bold text-xl text-white shadow-xl shadow-violet-600/40">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-teal-500 to-teal-600 flex items-center justify-center font-bold text-xl text-white shadow-xl shadow-violet-600/40">
             C
           </div>
           <div>
@@ -130,50 +113,35 @@ export default function LoginPage() {
               &ldquo;An award-winning sanctuary where biometric security, digital gate passes, and effortless campus living converge.&rdquo;
             </blockquote>
             <div className="flex items-center gap-3 pt-2 border-t border-white/10">
-              <img
-                src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80"
-                alt="Director"
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-violet-500"
-              />
-              <div>
-                <p className="text-sm font-bold text-white">Rev. Sr. Celine D&apos;Souza</p>
-                <p className="text-xs text-violet-400">Executive Director, Chavara Institutions</p>
-              </div>
+              <ShieldCheck className="w-5 h-5 text-teal-100" />
+              <p className="text-xs text-teal-100">Secure sign-in for residents, wardens and administrators</p>
             </div>
           </TiltCard>
         </StaggerItem>
 
         {/* Bottom Feature Badges */}
         <div className="relative z-10 grid grid-cols-3 gap-4 text-left">
-          <StaggerItem className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800/80 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-emerald-400 font-bold text-lg mb-1">
-              <ShieldCheck className="w-5 h-5" />
-              <AnimatedNumber value={99.9} format={(v) => `${v.toFixed(1)}%`} />
-            </div>
-            <p className="text-xs text-zinc-400">Campus Security & Location Index</p>
-          </StaggerItem>
-
-          <StaggerItem className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800/80 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-violet-400 font-bold text-lg mb-1">
-              <GraduationCap className="w-5 h-5" />
-              <AnimatedNumber value={450} format={(v) => `${Math.round(v)}+`} />
-            </div>
-            <p className="text-xs text-zinc-400">Active Female Scholars</p>
-          </StaggerItem>
-
-          <StaggerItem className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800/80 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-amber-400 font-bold text-lg mb-1">
-              <Heart className="w-5 h-5" />
-              <span>4 Wings</span>
-            </div>
-            <p className="text-xs text-zinc-400">Luxury Accommodation Blocks</p>
-          </StaggerItem>
+          {[
+            { icon: ShieldCheck, title: 'Digital gate passes', desc: 'Leave, outing and library approvals' },
+            { icon: GraduationCap, title: 'Resident services', desc: 'Fees, meals, complaints and rooms' },
+            { icon: Heart, title: 'Live notices', desc: 'Announcements reach every resident' },
+          ].map((f) => (
+            <StaggerItem key={f.title} className="p-4 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md">
+              <div className="flex items-center gap-2 text-teal-100 font-bold text-sm mb-1">
+                <f.icon className="w-5 h-5" />
+                <span>{f.title}</span>
+              </div>
+              <p className="text-xs text-teal-100/80">{f.desc}</p>
+            </StaggerItem>
+          ))}
         </div>
       </Stagger>
 
       {/* Right Side: Modern Login Card */}
-      <div className="w-full lg:w-5/12 flex flex-col justify-center px-6 sm:px-12 md:px-16 lg:px-12 xl:px-20 relative z-10 bg-zinc-950">
-        <Stagger stagger={0.07} delay={0.12} className="w-full max-w-md mx-auto space-y-8">
+      <div className="w-full lg:w-5/12 flex flex-col justify-center px-6 sm:px-12 md:px-16 lg:px-12 xl:px-20 relative z-10 overflow-hidden ambient-bg">
+        <div aria-hidden className="orb orb-a" />
+        <div aria-hidden className="orb orb-b" />
+        <Stagger stagger={0.07} delay={0.12} className="relative z-10 w-full max-w-md mx-auto space-y-6 glass-strong rounded-3xl p-8 sm:p-10">
           {/* Mobile Brand Logo */}
           <StaggerItem className="flex lg:hidden items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center font-bold text-lg text-white">
@@ -184,65 +152,23 @@ export default function LoginPage() {
 
           {/* Form Header */}
           <StaggerItem className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tight text-white">Sign in to Portal</h2>
-            <p className="text-sm text-zinc-400">
-              {isCloudSynced
-                ? 'Enter your Chavara Residence email and password.'
-                : 'Select your authorization role and access your residence dashboard.'}
+            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Sign in to Portal</h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              Enter your Chavara Residence email and password.
             </p>
           </StaggerItem>
 
-          {/* Interactive Role Selector Tabs — demo mode only; a real account already knows its own role. */}
           {!isCloudSynced && (
-            <StaggerItem className="p-1.5 rounded-2xl bg-zinc-900 border border-zinc-800 grid grid-cols-3 gap-1.5 shadow-inner">
-              {[
-                { id: 'student', label: 'Student', icon: GraduationCap },
-                { id: 'warden', label: 'Warden', icon: UserCheck },
-                { id: 'director', label: 'Director', icon: Building },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const isSelected = role === tab.id;
-                return (
-                  <motion.button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => handleRoleChange(tab.id as UserRole)}
-                    whileTap={{ scale: 0.97 }}
-                    transition={springs.snappy}
-                    className={cn(
-                      'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-colors relative',
-                      isSelected
-                        ? 'text-white'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-                    )}
-                  >
-                    {isSelected && (
-                      <motion.div
-                        layoutId="role-tab-pill"
-                        className="absolute inset-0 rounded-xl bg-violet-600 shadow-lg shadow-violet-600/30"
-                        transition={springs.soft}
-                      />
-                    )}
-                    <Icon className="w-3.5 h-3.5 shrink-0 relative z-10" />
-                    <span className="relative z-10">{tab.label}</span>
-                  </motion.button>
-                );
-              })}
-            </StaggerItem>
-          )}
-
-          {/* Role Status Note — demo mode only */}
-          {!isCloudSynced && (
-            <StaggerItem className="p-3 rounded-xl bg-violet-950/30 border border-violet-500/20 flex items-center gap-2.5 text-xs text-violet-300">
-              <CheckCircle2 className="w-4 h-4 text-violet-400 shrink-0" />
-              <span>Demo Mode Active: Logging in as <strong>{role === 'student' ? 'Ananya Sharma (Student)' : role === 'warden' ? 'Dr. Sr. Mary Thomas (Warden)' : "Rev. Sr. Celine D'Souza (Director)"}</strong>.</span>
+            <StaggerItem className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/30 flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-300">
+              <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <span>Backend not configured. Add <strong>NEXT_PUBLIC_SUPABASE_URL</strong> and <strong>NEXT_PUBLIC_SUPABASE_ANON_KEY</strong> to <strong>.env.local</strong> to enable sign in.</span>
             </StaggerItem>
           )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <StaggerItem className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300 flex items-center justify-between">
+              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 flex items-center justify-between">
                 <span>Email Address</span>
                 <span className="text-[10px] text-zinc-500 font-normal">Chavara SSO</span>
               </label>
@@ -254,15 +180,15 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={isCloudSynced ? 'you@chavara.edu' : undefined}
                   required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-medium"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-medium"
                 />
               </div>
             </StaggerItem>
 
             <StaggerItem className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300 flex items-center justify-between">
+              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 flex items-center justify-between">
                 <span>Password</span>
-                <a href="#forgot" onClick={(e) => { e.preventDefault(); toast.info(isCloudSynced ? 'Ask a warden or director to reset your password from Manage Accounts.' : 'Password reset instructions sent to your campus email.'); }} className="text-[11px] text-violet-400 hover:underline font-normal capitalize">
+                <a href="#forgot" onClick={(e) => { e.preventDefault(); toast.info('Ask a warden or director to reset your password from Manage Accounts.'); }} className="text-[11px] text-violet-400 hover:underline font-normal capitalize">
                   Forgot Password?
                 </a>
               </label>
@@ -274,7 +200,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={isCloudSynced ? 'Your password' : undefined}
                   required
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-medium"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-medium"
                 />
                 <motion.button
                   type="button"
@@ -307,7 +233,7 @@ export default function LoginPage() {
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 transition={springs.snappy}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 transition-shadow flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-violet-600 via-teal-600 to-teal-700 text-white font-bold text-sm shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 transition-shadow flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {isLoading ? (
@@ -331,7 +257,7 @@ export default function LoginPage() {
                       transition={{ duration: 0.25, ease: EASE_OUT }}
                       className="flex items-center justify-center gap-2"
                     >
-                      <span>{isCloudSynced ? 'Sign In' : `Sign in as ${role.toUpperCase()}`}</span>
+                      <span>Sign In</span>
                       <ArrowRight className="w-4 h-4" />
                     </motion.span>
                   )}
@@ -341,7 +267,7 @@ export default function LoginPage() {
           </form>
 
           {/* Footer Legal & Security */}
-          <StaggerItem className="pt-6 border-t border-zinc-900 text-center space-y-2">
+          <StaggerItem className="pt-6 border-t border-zinc-200 dark:border-zinc-900 text-center space-y-2">
             <p className="text-[11px] text-zinc-500">
               Protected by Chavara 256-bit SSL Biometric Gate Security.
             </p>

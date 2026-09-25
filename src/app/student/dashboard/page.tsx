@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useChavaraStore } from '@/lib/store';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Timeline } from '@/components/ui/Timeline';
 import {
@@ -27,8 +28,6 @@ import {
   Megaphone
 } from 'lucide-react';
 import {
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -50,28 +49,27 @@ import {
   springs,
 } from '@/lib/motion';
 
-const ATTENDANCE_DATA = [
-  { day: 'Mon', hoursPresent: 24, libraryHours: 3 },
-  { day: 'Tue', hoursPresent: 24, libraryHours: 4 },
-  { day: 'Wed', hoursPresent: 18, libraryHours: 2 }, // Outpass 6 hours
-  { day: 'Thu', hoursPresent: 24, libraryHours: 5 },
-  { day: 'Fri', hoursPresent: 24, libraryHours: 1.5 },
-  { day: 'Sat', hoursPresent: 16, libraryHours: 6 },
-  { day: 'Sun', hoursPresent: 24, libraryHours: 4 },
-];
-
 export default function StudentDashboard() {
   const store = useChavaraStore() as any; // Cast to bypass missing export if any
   const { currentUser, studentLeaves, foodOrders, feePayments, complaints, rooms, externalDeliveries } = store;
   const notices = store.notices || [];
 
-  const myRoom = rooms.find((r: any) => r.roomNumber === currentUser.roomNumber) || rooms[0];
+  const myRoom = currentUser.roomNumber ? rooms.find((r: any) => r.roomNumber === currentUser.roomNumber) : undefined;
   const roommates = myRoom?.students.filter((s: any) => s.id !== currentUser.id) || [];
   const pendingLeavesCount = studentLeaves.filter((l: any) => l.status === 'pending').length;
   const approvedLeaves = studentLeaves.filter((l: any) => l.status === 'approved');
   const activePass = approvedLeaves[0];
   const mealsOrderedCount = foodOrders.filter((f: any) => f.ordered).length;
   const pendingFeesAmount = feePayments.filter((f: any) => f.status === 'pending' || f.status === 'overdue').reduce((acc: any, curr: any) => acc + curr.amount, 0);
+  const nextDue = feePayments
+    .filter((f: any) => f.status === 'pending' || f.status === 'overdue')
+    .map((f: any) => f.dueDate)
+    .filter(Boolean)
+    .sort()[0];
+  const leaveTypeLabels: Record<string, string> = { general: 'General', home: 'Home', outpass: 'Outpass', library: 'Library', class: 'Class' };
+  const leaveTypeData = Object.keys(leaveTypeLabels)
+    .map((t) => ({ type: leaveTypeLabels[t], count: studentLeaves.filter((l: any) => l.type === t).length }))
+    .filter((d) => d.count > 0);
   const myActiveDeliveries = externalDeliveries.filter((d: any) => (d.studentId === currentUser.id || currentUser.role !== 'student') && (d.status === 'en-route' || d.status === 'arrived-gate'));
 
   // Filter notices for this student's block or 'All'
@@ -81,18 +79,18 @@ export default function StudentDashboard() {
     .slice(0, 2); // Show top 2 latest
 
   const quickActions = [
-    { title: 'Log Local Outing', desc: 'City mall, hospital, shopping', icon: MapPin, href: '/student/outpass', color: 'from-violet-600 to-indigo-600' },
-    { title: 'Home Leave Application', desc: 'Weekend & vacation leave', icon: Home, href: '/student/home-leave', color: 'from-purple-600 to-pink-600' },
+    { title: 'Log Local Outing', desc: 'City mall, hospital, shopping', icon: MapPin, href: '/student/outpass', color: 'from-violet-600 to-teal-700' },
+    { title: 'Home Leave Application', desc: 'Weekend & vacation leave', icon: Home, href: '/student/home-leave', color: 'from-teal-600 to-pink-600' },
     { title: 'Log Swiggy / Zomato', desc: 'Pre-clear gate delivery', icon: ShoppingBag, href: '/student/food-orders', color: 'from-orange-500 to-rose-500' },
     { title: 'Log Maintenance Issue', desc: 'Plumbing, Wi-Fi, Electrical', icon: AlertCircle, href: '/student/complaints', color: 'from-emerald-600 to-teal-600' },
-    { title: 'Library Study Register', desc: 'Study access till 11 PM', icon: BookOpen, href: '/student/library-pass', color: 'from-amber-600 to-orange-600' },
+    { title: 'Library Study Register', desc: 'Request study access', icon: BookOpen, href: '/student/library-pass', color: 'from-amber-600 to-orange-600' },
     { title: 'Pay Semester Fee', desc: pendingFeesAmount > 0 ? `$${pendingFeesAmount} due soon` : 'All dues cleared', icon: CreditCard, href: '/student/fee-payment', color: 'from-blue-600 to-cyan-600' },
   ];
 
   return (
     <div className="space-y-8">
       {/* Welcome Hero Banner */}
-      <TiltCard max={4} className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-900 via-purple-900 to-zinc-950 p-6 sm:p-8 text-white shadow-xl border border-violet-500/20">
+      <TiltCard max={4} className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 hero-surface p-6 sm:p-8 text-white shadow-xl border border-violet-500/20">
         <div className="absolute -right-10 -top-10 w-64 h-64 bg-violet-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-1/3 -bottom-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -100,13 +98,17 @@ export default function StudentDashboard() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-violet-200 border border-white/10">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Monsoon Semester 2026 — Active Scholar</span>
+              <span>{currentUser.course ? `${currentUser.course}${currentUser.year ? ` — ${currentUser.year}` : ''}` : 'Student'}</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
               Welcome back, {currentUser.name.split(' ')[0]}! 👋
             </h1>
             <p className="text-sm text-zinc-300 max-w-xl">
-              You are currently checked in at <strong className="text-white">Room {currentUser.roomNumber}</strong> ({currentUser.block}). Your campus location register is active.
+              {currentUser.roomNumber ? (
+                <>You are currently checked in at <strong className="text-white">Room {currentUser.roomNumber}</strong>{currentUser.block ? ` (${currentUser.block})` : ''}. Your campus location register is active.</>
+              ) : (
+                <>No room has been assigned to you yet. Your campus location register is active.</>
+              )}
             </p>
           </div>
 
@@ -186,7 +188,7 @@ export default function StudentDashboard() {
             </span>
             <StatusBadge status={currentUser.attendanceToday || 'present'} size="sm" />
           </div>
-          <p className="text-xs text-zinc-500">Curfew check-in at 08:30 PM</p>
+          <p className="text-xs text-zinc-500">As recorded in the campus register</p>
         </StaggerItem>
 
         {/* Widget 2: Room Allocation */}
@@ -197,13 +199,13 @@ export default function StudentDashboard() {
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">
-              {currentUser.roomNumber || '304A'}
+              {currentUser.roomNumber || 'Not assigned'}
             </span>
             <span className="text-xs font-bold text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/60 px-2 py-0.5 rounded-md">
-              Block {myRoom.block}
+              {myRoom?.block || currentUser.block ? `Block ${myRoom?.block || currentUser.block}` : '—'}
             </span>
           </div>
-          <p className="text-xs text-zinc-500 truncate">Roommate: {roommates[0]?.name || 'Diya Patel'}</p>
+          <p className="text-xs text-zinc-500 truncate">Roommate: {roommates[0]?.name || '—'}</p>
         </StaggerItem>
 
         {/* Widget 4: Fee Dues */}
@@ -222,7 +224,7 @@ export default function StudentDashboard() {
               <StatusBadge status="overdue" size="sm" />
             )}
           </div>
-          <p className="text-xs text-zinc-500">Next due date: July 31st, 2026</p>
+          <p className="text-xs text-zinc-500">{nextDue ? `Next due date: ${nextDue}` : 'No upcoming dues'}</p>
         </StaggerItem>
       </Stagger>
 
@@ -244,7 +246,7 @@ export default function StudentDashboard() {
               <motion.div {...hoverLift} className="h-full">
               <Link
                 href={action.href}
-                className="group relative overflow-hidden p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-violet-500/50 dark:hover:border-violet-500/50 transition-colors duration-300 shadow-sm hover:shadow-md flex items-center justify-between h-full"
+                className="group relative overflow-hidden p-4 rounded-2xl glass-control/80 hover:border-violet-500/50 dark:hover:border-violet-500/50 transition-colors duration-300 shadow-sm hover:shadow-md flex items-center justify-between h-full"
               >
                 <div className="flex items-center gap-3.5">
                   <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center text-white shadow-md shadow-violet-500/10 group-hover:scale-110 transition-transform duration-300`}>
@@ -266,59 +268,51 @@ export default function StudentDashboard() {
         </Stagger>
       </div>
 
-      {/* Middle Section: Attendance Chart & Active Leave / Pass Card */}
+      {/* Middle Section: Requests Chart & Active Leave / Pass Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Attendance Area Chart (2 Cols) */}
         <Reveal className="lg:col-span-2 glass-card p-6 rounded-3xl space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
             <div>
               <h3 className="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-violet-600" />
-                <span>Weekly Campus & Library Movement</span>
+                <span>My Movement Requests by Type</span>
               </h3>
-              <p className="text-xs text-zinc-500">Hours spent on campus premises vs digital library study</p>
+              <p className="text-xs text-zinc-500">Number of requests you have submitted, grouped by type</p>
             </div>
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
-              98.4% Attendance
+              {studentLeaves.length} Total
             </span>
           </div>
 
           <div className="h-64 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={ATTENDANCE_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8d7cc9" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#8d7cc9" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="colorLib" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1c9a89" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#1c9a89" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.15)" vertical={false} />
-                <XAxis dataKey="day" stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#8a8799" fontSize={12} tickLine={false} axisLine={false} unit="h" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(28, 27, 34, 0.95)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    color: '#fff',
-                    fontSize: '12px',
-                  }}
-                />
-                <Area type="monotone" name="Campus Hours" dataKey="hoursPresent" stroke="#8d7cc9" strokeWidth={3} fillOpacity={1} fill="url(#colorPresent)" />
-                <Area type="monotone" name="Library Study" dataKey="libraryHours" stroke="#1c9a89" strokeWidth={2} fillOpacity={1} fill="url(#colorLib)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {leaveTypeData.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={leaveTypeData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.15)" vertical={false} />
+                  <XAxis dataKey="type" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: '#fff',
+                      fontSize: '12px',
+                    }}
+                  />
+                  <Bar name="Requests" dataKey="count" fill="#0d9488" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Reveal>
 
         {/* Active Delivery & Roommate Widget (1 Col) */}
         <div className="space-y-6">
           {/* Live Swiggy/Zomato Delivery Card */}
-          <div className="p-6 rounded-3xl bg-gradient-to-br from-orange-950 via-zinc-900 to-zinc-950 text-white border border-orange-500/30 shadow-xl space-y-4 relative overflow-hidden">
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 text-white border border-orange-500/30 shadow-xl space-y-4 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/15 rounded-full blur-2xl" />
             
             <div className="flex items-center justify-between">
@@ -390,13 +384,16 @@ export default function StudentDashboard() {
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-sm text-zinc-900 dark:text-white flex items-center gap-2">
                 <Users className="w-4 h-4 text-violet-600" />
-                <span>Room {currentUser.roomNumber} Residents</span>
+                <span>{currentUser.roomNumber ? `Room ${currentUser.roomNumber} Residents` : 'Room Residents'}</span>
               </h4>
-              <span className="text-xs text-zinc-400">{myRoom.occupied}/{myRoom.capacity} Beds</span>
+              <span className="text-xs text-zinc-400">{myRoom ? `${myRoom.occupied}/${myRoom.capacity} Beds` : '—'}</span>
             </div>
 
             <div className="space-y-2.5 pt-1">
-              {myRoom.students.map((student: any) => (
+              {(!myRoom || myRoom.students.length === 0) && (
+                <p className="text-xs text-zinc-500 italic">No room assigned yet.</p>
+              )}
+              {myRoom?.students.map((student: any) => (
                 <div key={student.id} className="flex items-center justify-between p-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800">
                   <div className="flex items-center gap-2.5">
                     <img src={student.avatar} alt={student.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-violet-500/20" />
@@ -407,9 +404,6 @@ export default function StudentDashboard() {
                       <p className="text-[10px] text-zinc-500 mt-0.5">{student.course}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-0.5 rounded">
-                    Present
-                  </span>
                 </div>
               ))}
             </div>
@@ -478,6 +472,9 @@ export default function StudentDashboard() {
             </motion.div>
           ))}
           </AnimatePresence>
+          {studentLeaves.length === 0 && (
+            <p className="text-sm text-zinc-400 md:col-span-2 text-center py-4">No movement logs yet.</p>
+          )}
         </div>
       </Reveal>
     </div>

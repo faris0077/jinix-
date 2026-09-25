@@ -18,7 +18,6 @@ import {
   BarChart3,
   Search,
   Sparkles,
-  ArrowRightLeft,
   X,
   FileText,
   UserCheck
@@ -32,7 +31,7 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const router = useRouter();
-  const { currentUser, switchRole, users } = useChavaraStore();
+  const { currentUser } = useChavaraStore();
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -60,7 +59,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => onOpenChange(false)}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-slate-950/30 backdrop-blur-md z-50"
           />
 
           <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 pointer-events-none">
@@ -75,7 +74,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 transition: { duration: 0.18, ease: 'easeIn' },
               }}
               transition={{ duration: 0.35, ease: EASE_OUT }}
-              className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden pointer-events-auto"
+              className="w-full max-w-2xl glass-strong rounded-3xl overflow-hidden pointer-events-auto"
             >
               <Command
                 label="Global Command Palette"
@@ -87,7 +86,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   <Command.Input
                     value={search}
                     onValueChange={setSearch}
-                    placeholder="Type a command or search modules... (e.g. 'Leave', 'Outing', 'Warden')"
+                    placeholder="Type a command or search modules... (e.g. 'Leave', 'Complaints', 'Approvals')"
                     className="w-full py-4 bg-transparent text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none"
                     autoFocus
                   />
@@ -105,31 +104,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   </Command.Empty>
 
                   <Stagger stagger={0.05} delay={0.05} className="space-y-2">
-                  {/* Quick Role Switcher Group */}
-                  <StaggerItem className="[&:has([cmdk-group][hidden])]:hidden">
-                  <Command.Group heading="⚡ Demo Role Switcher" className="px-2 py-1.5 text-xs font-bold text-zinc-400 uppercase">
-                    {(['student', 'warden', 'director'] as const).map((role) => (
-                      <Command.Item
-                        key={role}
-                        onSelect={() => runCommand(() => {
-                          switchRole(role);
-                          router.push(`/${role}/dashboard`);
-                        })}
-                        className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:text-violet-600 dark:hover:text-violet-400 cursor-pointer transition-colors aria-selected:bg-violet-100 dark:aria-selected:bg-violet-950/60 aria-selected:text-violet-700 dark:aria-selected:text-violet-300"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <ArrowRightLeft className="w-4 h-4 text-violet-500" />
-                          <span>Switch view to <strong className="capitalize">{role} Portal</strong></span>
-                        </div>
-                        <span className="text-[10px] bg-violet-100 dark:bg-violet-900 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded font-bold uppercase">
-                          Demo Action
-                        </span>
-                      </Command.Item>
-                    ))}
-                  </Command.Group>
-                  </StaggerItem>
-
                   {/* Student Modules */}
+                  {currentUser.role === 'student' && (
                   <StaggerItem className="[&:has([cmdk-group][hidden])]:hidden">
                   <Command.Group heading="🎓 Student Modules" className="px-2 py-1.5 text-xs font-bold text-zinc-400 uppercase">
                     {[
@@ -156,8 +132,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     })}
                   </Command.Group>
                   </StaggerItem>
+                  )}
 
                   {/* Warden Modules */}
+                  {currentUser.role === 'warden' && (
                   <StaggerItem className="[&:has([cmdk-group][hidden])]:hidden">
                   <Command.Group heading="🛡️ Warden Modules" className="px-2 py-1.5 text-xs font-bold text-zinc-400 uppercase">
                     {[
@@ -182,8 +160,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     })}
                   </Command.Group>
                   </StaggerItem>
+                  )}
 
                   {/* Director Modules */}
+                  {currentUser.role === 'director' && (
                   <StaggerItem className="[&:has([cmdk-group][hidden])]:hidden">
                   <Command.Group heading="👔 Director Executive Suite" className="px-2 py-1.5 text-xs font-bold text-zinc-400 uppercase">
                     {[
@@ -204,6 +184,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     })}
                   </Command.Group>
                   </StaggerItem>
+                  )}
                   </Stagger>
                 </Command.List>
 
@@ -213,7 +194,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     <span>Select with <kbd className="font-mono bg-zinc-200 dark:bg-zinc-800 px-1 rounded">Enter</kbd></span>
                   </div>
                   <span className="flex items-center gap-1 font-semibold text-violet-600 dark:text-violet-400">
-                    <Sparkles className="w-3 h-3" /> Raycast Speed
+                    <Sparkles className="w-3 h-3" /> Quick Search
                   </span>
                 </div>
               </Command>

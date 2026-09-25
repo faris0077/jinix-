@@ -68,7 +68,7 @@ export default function ManageAccountsPage() {
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-colors flex items-center gap-2"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-teal-700 hover:from-violet-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 transition-colors flex items-center gap-2"
         >
           <UserPlus className="w-4 h-4" /> Create New Account
         </motion.button>

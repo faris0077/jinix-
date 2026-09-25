@@ -29,10 +29,10 @@ export default function FoodOrdersPage() {
 
   // External delivery form state
   const [platform, setPlatform] = useState<'Swiggy' | 'Zomato' | 'Instamart' | 'Zepto' | 'Blinkit' | 'Domino\'s' | 'Other'>('Swiggy');
-  const [deliveryDate, setDeliveryDate] = useState('2026-07-25');
-  const [department, setDepartment] = useState(currentUser.course || 'B.Tech Computer Science');
-  const [roomNo, setRoomNo] = useState(currentUser.roomNumber || '304A');
-  const [expectedTime, setExpectedTime] = useState('20:15');
+  const [deliveryDate, setDeliveryDate] = useState(new Date().toISOString().split('T')[0]);
+  const [department, setDepartment] = useState(currentUser.course || '');
+  const [roomNo, setRoomNo] = useState(currentUser.roomNumber || '');
+  const [expectedTime, setExpectedTime] = useState('');
   const [partnerPhone, setPartnerPhone] = useState('');
 
   const orderedCount = foodOrders.filter((f) => f.ordered).length;
@@ -152,7 +152,7 @@ export default function FoodOrdersPage() {
                       type="text"
                       value={department}
                       onChange={(e) => setDepartment(e.target.value)}
-                      placeholder="e.g. B.Tech Computer Science"
+                      placeholder="Your department or course"
                       required
                       className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium"
                     />
@@ -166,7 +166,7 @@ export default function FoodOrdersPage() {
                       type="text"
                       value={roomNo}
                       onChange={(e) => setRoomNo(e.target.value)}
-                      placeholder="e.g. 304A"
+                      placeholder="Your room number"
                       required
                       className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold"
                     />
@@ -180,7 +180,7 @@ export default function FoodOrdersPage() {
                       type="text"
                       value={partnerPhone}
                       onChange={(e) => setPartnerPhone(e.target.value)}
-                      placeholder="e.g. +91 98700 / OTP: 4482"
+                      placeholder="Phone number or OTP"
                       className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono text-xs"
                     />
                   </div>
@@ -250,9 +250,9 @@ export default function FoodOrdersPage() {
                       <div className="flex items-center gap-2 text-[11px] font-semibold text-zinc-500 bg-zinc-50 dark:bg-zinc-800/50 px-3 py-1.5 rounded-xl border border-zinc-100 dark:border-zinc-800 flex-wrap">
                         <span className="text-orange-600 dark:text-orange-400 font-bold">Room {deliv.roomNumber}</span>
                         <span>•</span>
-                        <span>{deliv.department || 'B.Tech CS'}</span>
+                        <span>{deliv.department || '—'}</span>
                         <span>•</span>
-                        <span>Date: <strong className="text-zinc-700 dark:text-zinc-300">{deliv.date || 'Today'}</strong></span>
+                        <span>Date: <strong className="text-zinc-700 dark:text-zinc-300">{deliv.date || '—'}</strong></span>
                       </div>
 
                       <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">{deliv.itemsSummary}</p>
@@ -301,8 +301,8 @@ export default function FoodOrdersPage() {
               </h4>
               <ul className="text-xs text-zinc-600 dark:text-zinc-400 space-y-2 leading-relaxed list-disc pl-4">
                 <li>All outside food deliveries (Swiggy, Zomato, Domino's) must be logged in advance for security clearance.</li>
-                <li>Delivery partners are strictly restricted to <strong>Main Security Gate (Block B Turnstile Area)</strong>.</li>
-                <li>Deliveries arriving post-curfew (08:30 PM) require Warden sign-off to be released from the guard cabin.</li>
+                <li>Delivery partners are restricted to the <strong>Main Security Gate</strong>.</li>
+                <li>Deliveries arriving after curfew require Warden sign-off to be released from the guard cabin.</li>
                 <li>Please collect and dispose of all plastic packaging in the designated recycling bins.</li>
               </ul>
             </StaggerItem>
@@ -327,7 +327,7 @@ export default function FoodOrdersPage() {
                         animate="visible"
                         exit="exit"
                         layout
-                        className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1.5 text-xs"
+                        className="p-3.5 rounded-2xl glass-control space-y-1.5 text-xs"
                       >
                       <div className="flex items-center justify-between font-bold text-zinc-900 dark:text-white">
                         <span>{deliv.platform} - {deliv.restaurantOrStore}</span>
@@ -338,9 +338,9 @@ export default function FoodOrdersPage() {
                       <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
                         <span className="text-orange-600 dark:text-orange-400 font-bold">Room {deliv.roomNumber}</span>
                         <span>•</span>
-                        <span>{deliv.department || 'B.Tech CS'}</span>
+                        <span>{deliv.department || '—'}</span>
                         <span>•</span>
-                        <span>{deliv.date || 'Today'}</span>
+                        <span>{deliv.date || '—'}</span>
                       </div>
                       <p className="text-[11px] text-zinc-500 truncate">{deliv.itemsSummary}</p>
                       <p className="text-[10px] text-zinc-400 font-mono">

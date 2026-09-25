@@ -74,14 +74,15 @@ export function CreateUserModal({ open, onOpenChange, onCreated }: CreateUserMod
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={close}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-slate-950/30 backdrop-blur-md z-50"
           />
-          <motion.div
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
             variants={scaleIn}
             initial="hidden"
             animate="visible"
             exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.15 } }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-50 p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            className="pointer-events-auto w-full max-w-md glass-strong rounded-2xl shadow-2xl z-50 p-6 space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
@@ -139,6 +140,7 @@ export function CreateUserModal({ open, onOpenChange, onCreated }: CreateUserMod
               </motion.button>
             </form>
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
